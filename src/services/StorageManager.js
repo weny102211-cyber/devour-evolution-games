@@ -6,6 +6,7 @@ const DEFAULT_DATA = {
   bestScore: 0,
   currentSkin: 'neon_cyan',
   unlockedSkins: ['neon_cyan'],
+  redeemedCodes: [],
   upgrades: {
     magnet: 0,
     speed: 0,
@@ -42,6 +43,7 @@ class StorageManagerClass {
         return {
           ...DEFAULT_DATA,
           ...parsed,
+          redeemedCodes: Array.isArray(parsed.redeemedCodes) ? parsed.redeemedCodes : [],
           upgrades: { ...DEFAULT_DATA.upgrades, ...(parsed.upgrades || {}) },
           settings: { ...DEFAULT_DATA.settings, ...(parsed.settings || {}) },
           achievements: { ...DEFAULT_DATA.achievements, ...(parsed.achievements || {}) },
@@ -111,6 +113,51 @@ class StorageManagerClass {
     this.data.currentSkin = skinId;
     this.save();
     return true;
+  }
+
+  // 礼包兑换码与赞助特权发放
+  redeemCode(rawCode) {
+    if (!rawCode || typeof rawCode !== 'string') {
+      return { success: false, message: '请输入有效的兑换码' };
+    }
+    const code = rawCode.trim().toUpperCase();
+    if (!code) {
+      return { success: false, message: '兑换码不能为空' };
+    }
+
+    if (!this.data.redeemedCodes) {
+      this.data.redeemedCodes = [];
+    }
+    if (this.data.redeemedCodes.includes(code)) {
+      return { success: false, message: '该兑换码已使用过，无法重复兑换！' };
+    }
+
+    if (code === 'VIP888') {
+      this.addCoins(888);
+      this.data.redeemedCodes.push(code);
+      this.save();
+      return { success: true, message: '🎉 成功兑换新手进阶礼包：获得 888 🪙 金币！' };
+    } else if (code === 'DEVOUR666') {
+      this.addCoins(666);
+      this.data.redeemedCodes.push(code);
+      this.save();
+      return { success: true, message: '🎉 成功兑换狂欢礼包：获得 666 🪙 金币！' };
+    } else if (code === 'GOLD888') {
+      this.unlockSkin('solar_gold');
+      this.setSkin('solar_gold');
+      this.data.redeemedCodes.push(code);
+      this.save();
+      return { success: true, message: '👑 成功解锁【日耀炽金】限定皮肤并已自动装备！' };
+    } else if (code === 'GOD2026' || code === 'SPONSOR999' || code === 'AFDIAN2026') {
+      this.unlockSkin('cyber_god');
+      this.setSkin('cyber_god');
+      this.addCoins(2026);
+      this.data.redeemedCodes.push(code);
+      this.save();
+      return { success: true, message: '⚡ 感谢您的鼎力赞助！已解锁【赛博神明·终极奇点】限定皮肤与 2026 🪙，初始速度额外加成 +20%！' };
+    }
+
+    return { success: false, message: '兑换码不存在或已失效，请确认输入或前往赞助获取！' };
   }
 
   // 天赋强化相关

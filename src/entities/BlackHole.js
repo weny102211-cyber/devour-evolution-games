@@ -76,6 +76,9 @@ export class BlackHole {
     if (this.upgrades.speed) {
       spd *= (1.0 + this.upgrades.speed * 0.06);
     }
+    if (this.currentSkinDef && this.currentSkinDef.speedBonus) {
+      spd *= this.currentSkinDef.speedBonus;
+    }
     if (this.buffs.speed > 0) {
       spd *= 1.5;
     }

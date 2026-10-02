@@ -1333,4 +1333,231 @@ html, body {
   border-color: #ffd700;
 }
 
+/* =========================================
+   赞助作者与特权兑换弹窗 (Sponsor & VIP Modal)
+   ========================================= */
+.btn-sponsor-nav {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.25) 0%, rgba(255, 170, 0, 0.35) 100%) !important;
+  border-color: rgba(255, 215, 0, 0.5) !important;
+  color: #ffd700 !important;
+  font-weight: 800 !important;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+}
+
+.sponsor-box {
+  max-width: 480px;
+  width: 90%;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.sponsor-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding-bottom: 10px;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  color: #94a3b8;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tab-btn.active {
+  background: linear-gradient(135deg, #00ffcc 0%, #00b4d8 100%);
+  color: #0b101e;
+  border-color: #00ffcc;
+  box-shadow: 0 4px 14px rgba(0, 255, 204, 0.3);
+}
+
+.redeem-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.redeem-title {
+  color: #e2e8f0;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  text-align: left;
+}
+
+.redeem-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.redeem-input-row input {
+  flex: 1;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.4);
+  color: #ffffff;
+  font-size: 15px;
+  outline: none;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.redeem-input-row input:focus {
+  border-color: #00ffcc;
+  box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+}
+
+.btn-redeem {
+  padding: 0 18px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ffd700 0%, #ff9500 100%);
+  border: none;
+  color: #0b101e;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.1s, box-shadow 0.2s;
+}
+
+.btn-redeem:active {
+  transform: scale(0.96);
+}
+
+.redeem-msg {
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  min-height: 18px;
+  text-align: left;
+}
+
+.redeem-msg.success {
+  color: #00ffcc;
+}
+
+.redeem-msg.error {
+  color: #ff4757;
+}
+
+.perks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.perk-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 12px;
+  text-align: left;
+}
+
+.perk-item.highlight-item {
+  border-color: rgba(255, 0, 255, 0.4);
+  background: linear-gradient(135deg, rgba(255, 0, 255, 0.08) 0%, rgba(0, 255, 255, 0.08) 100%);
+}
+
+.perk-icon {
+  font-size: 24px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.perk-info .perk-title {
+  color: #f1f5f9;
+  font-size: 14px;
+  font-weight: 800;
+  margin-bottom: 2px;
+}
+
+.perk-info .perk-desc {
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.donate-card {
+  padding: 10px 0;
+  text-align: center;
+}
+
+.donate-intro {
+  color: #cbd5e1;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 18px;
+  text-align: left;
+}
+
+.donate-tiers {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.tier-pill {
+  flex: 1;
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px dashed rgba(255, 215, 0, 0.4);
+  color: #ffd700;
+  padding: 10px 8px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.donate-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.btn-afdian {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 14px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #9466ff 0%, #6830ff 100%);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: 0 6px 20px rgba(148, 102, 255, 0.4);
+  transition: transform 0.1s, box-shadow 0.2s;
+}
+
+.btn-afdian:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(148, 102, 255, 0.6);
+}
+
+.donate-tip {
+  color: #94a3b8;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 

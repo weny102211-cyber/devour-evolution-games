@@ -128,6 +128,20 @@ export const GameConfig = {
       glowColor: 0xf72585,
       particleColor: 0x4cc9f0,
       nameplateColor: '#00f5d4'
+    },
+    {
+      id: 'cyber_god',
+      name: '赛博神明·终极奇点',
+      desc: '赞助者专属尊荣！极光电弧矩阵，全场速度永久额外加成 +20%',
+      price: 99999,
+      icon: '⚡',
+      exclusive: true,
+      speedBonus: 1.2,
+      rimColor: 0x00ffff,
+      pulseColor: 0xff00ff,
+      glowColor: 0xffff00,
+      particleColor: 0x00ffea,
+      nameplateColor: '#ff00ff'
     }
   ],
 

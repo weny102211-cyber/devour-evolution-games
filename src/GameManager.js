@@ -11,6 +11,7 @@ import { ParticleSystem } from './vfx/ParticleSystem.js';
 import { UIManager } from './ui/UIManager.js';
 import { StorageManager } from './services/StorageManager.js';
 import { AchievementManager } from './services/AchievementManager.js';
+import { DouyinPlatform } from './platform/DouyinPlatform.js';
 
 // 游戏总控枢纽 (支持对战/无尽双模式自适应、皮肤衣橱、天赋升级、掉落道具、雷达与战报结算)
 export class GameManager {
@@ -195,6 +196,7 @@ export class GameManager {
     this.audio.ensureContext();
     this.audio.startBGM();
 
+    DouyinPlatform.gameplayStart();
     requestAnimationFrame((t) => this.loop(t));
   }
 
@@ -433,6 +435,9 @@ export class GameManager {
   onMatchComplete() {
     this.isRunning = false;
     this.audio.playGameOver();
+
+    DouyinPlatform.gameplayStop();
+    DouyinPlatform.showMidgameAd();
 
     let rank = 1;
     if (this.mode === GameModes.BATTLE) {

@@ -92,39 +92,129 @@ class DouyinPlatformClass {
     }
   }
 
-  // 2. 激励视频广告播放 (看广告翻倍金币 / 解锁高级皮肤)
-  showRewardedVideoAd(adUnitId = 'your_ad_unit_id', onSuccess, onFail) {
-    if (!this.isTT || !tt.createRewardedVideoAd) {
-      // 浏览器环境提示并模拟观看完毕
-      console.log('[Douyin] 非真机环境，直接模拟广告播放完毕并下发奖励');
-      alert('【模拟抖音广告】观看完毕！已为您成功发放奖励！');
-      if (onSuccess) onSuccess();
-      return;
+  // CrazyGames SDK 局内打点
+  gameplayStart() {
+    if (typeof window !== 'undefined' && window.CrazyGames && window.CrazyGames.SDK && window.CrazyGames.SDK.game) {
+      try {
+        window.CrazyGames.SDK.game.gameplayStart();
+        console.log('[CrazyGames] gameplayStart dispatched');
+      } catch (e) {
+        console.warn('[CrazyGames] gameplayStart error:', e);
+      }
     }
+  }
 
-    try {
-      const rewardedVideoAd = tt.createRewardedVideoAd({ adUnitId });
+  gameplayStop() {
+    if (typeof window !== 'undefined' && window.CrazyGames && window.CrazyGames.SDK && window.CrazyGames.SDK.game) {
+      try {
+        window.CrazyGames.SDK.game.gameplayStop();
+        console.log('[CrazyGames] gameplayStop dispatched');
+      } catch (e) {
+        console.warn('[CrazyGames] gameplayStop error:', e);
+      }
+    }
+  }
 
-      rewardedVideoAd.load()
-        .then(() => rewardedVideoAd.show())
-        .catch(err => {
-          console.warn('[Douyin] 广告拉取失败，降级发放奖励:', err);
-          if (onSuccess) onSuccess();
+  // 局间/死亡插屏广告 (CrazyGames / 网页端变现)
+  showMidgameAd(onComplete) {
+    if (typeof window !== 'undefined' && window.CrazyGames && window.CrazyGames.SDK && window.CrazyGames.SDK.ad) {
+      try {
+        window.CrazyGames.SDK.ad.requestAd('midgame', {
+          adStarted: () => console.log('[CrazyGames] Midgame ad started'),
+          adFinished: () => {
+            console.log('[CrazyGames] Midgame ad finished');
+            if (onComplete) onComplete();
+          },
+          adError: (err) => {
+            console.warn('[CrazyGames] Midgame ad error/fallback:', err);
+            if (onComplete) onComplete();
+          }
         });
-
-      rewardedVideoAd.onClose(res => {
-        if (res && res.isEnded) {
-          console.log('[Douyin] 激励广告完整播放完成');
-          if (onSuccess) onSuccess();
-        } else {
-          console.log('[Douyin] 广告未播完关闭，无奖励');
-          if (onFail) onFail();
-        }
-      });
-    } catch (e) {
-      console.warn('[Douyin] 广告创建异常:', e);
-      if (onSuccess) onSuccess();
+        return;
+      } catch (e) {
+        console.warn('[CrazyGames] requestAd midgame exception:', e);
+      }
     }
+    if (onComplete) onComplete();
+  }
+
+  // 2. 激励视频广告播放 (看广告翻倍金币 / 解锁高级皮肤 / CrazyGames / 4399 / 抖音)
+  showRewardedVideoAd(adUnitId = 'your_ad_unit_id', onSuccess, onFail) {
+    // A. CrazyGames 激励视频变现
+    if (typeof window !== 'undefined' && window.CrazyGames && window.CrazyGames.SDK && window.CrazyGames.SDK.ad) {
+      try {
+        window.CrazyGames.SDK.ad.requestAd('rewarded', {
+          adStarted: () => console.log('[CrazyGames] Rewarded ad started'),
+          adFinished: () => {
+            console.log('[CrazyGames] Rewarded ad finished, rewarding player!');
+            if (onSuccess) onSuccess();
+          },
+          adError: (err) => {
+            console.warn('[CrazyGames] Rewarded ad error or closed early:', err);
+            if (onFail) onFail(err);
+          }
+        });
+        return;
+      } catch (e) {
+        console.warn('[CrazyGames] Rewarded ad call failed:', e);
+      }
+    }
+
+    // B. 4399 H5 广告联盟变现
+    if (typeof window !== 'undefined' && window.h5api && typeof window.h5api.canPlayAd === 'function') {
+      try {
+        window.h5api.canPlayAd((data) => {
+          if (data && data.canPlayAd) {
+            window.h5api.playAd((order) => {
+              if (order && (order.code === 10000 || order.code === 10001)) {
+                if (onSuccess) onSuccess();
+              } else {
+                if (onFail) onFail(order);
+              }
+            });
+          } else {
+            if (onSuccess) onSuccess();
+          }
+        });
+        return;
+      } catch (e) {
+        console.warn('[4399] Ad play exception:', e);
+      }
+    }
+
+    // C. 抖音小游戏真机广告
+    if (this.isTT && tt.createRewardedVideoAd) {
+      try {
+        const rewardedVideoAd = tt.createRewardedVideoAd({ adUnitId });
+
+        rewardedVideoAd.load()
+          .then(() => rewardedVideoAd.show())
+          .catch(err => {
+            console.warn('[Douyin] 广告拉取失败，降级发放奖励:', err);
+            if (onSuccess) onSuccess();
+          });
+
+        rewardedVideoAd.onClose(res => {
+          if (res && res.isEnded) {
+            console.log('[Douyin] 激励广告完整播放完成');
+            if (onSuccess) onSuccess();
+          } else {
+            console.log('[Douyin] 广告未播完关闭，无奖励');
+            if (onFail) onFail();
+          }
+        });
+        return;
+      } catch (e) {
+        console.warn('[Douyin] 广告创建异常:', e);
+        if (onSuccess) onSuccess();
+        return;
+      }
+    }
+
+    // D. 浏览器环境模拟观看完毕
+    console.log('[Platform] 演示环境无广告 SDK，直接模拟广告播放完毕并下发奖励');
+    alert('【广告奖励下发】感谢您的支持！已为您成功发放 300 🪙 金币奖励！');
+    if (onSuccess) onSuccess();
   }
 
   // 3. 手机震动触觉反馈

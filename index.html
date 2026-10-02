@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>吞噬进化Games - 抖音小游戏</title>
+  <title>吞噬进化Games - 3D黑洞吞噬进化</title>
   <link rel="stylesheet" href="style.css">
+  <!-- CrazyGames SDK v3 (出海广告全球变现) -->
+  <script src="https://sdk.crazygames.com/crazygames-sdk-v3.js"></script>
 </head>
 <body>
   <!-- 3D 渲染画布容器 -->
@@ -43,6 +45,7 @@
           <button id="btn-open-skins" class="menu-sub-btn" title="黑洞个性皮肤">🎨 皮肤</button>
           <button id="btn-open-upgrades" class="menu-sub-btn" title="天赋强化研究所">🧪 研究所</button>
           <button id="btn-open-achievements" class="menu-sub-btn" title="成就荣耀徽章">🏆 成就</button>
+          <button id="btn-open-sponsor" class="menu-sub-btn btn-sponsor-nav" title="赞助作者与特权兑换">👑 赞助/特权</button>
         </div>
       </div>
 
@@ -132,6 +135,79 @@
     </div>
   </div>
 
+  <!-- 赞助作者与特权礼包兑换弹窗 (Sponsor & VIP Modal) -->
+  <div id="sponsor-modal" class="overlay-modal" style="display: none;">
+    <div class="modal-box sponsor-box">
+      <div class="modal-head">
+        <h3>👑 赞助作者 & 特权兑换</h3>
+        <button id="btn-close-sponsor" class="close-x-btn">✕</button>
+      </div>
+
+      <div class="sponsor-tabs">
+        <button id="tab-btn-vip" class="tab-btn active">🎁 兑换礼包</button>
+        <button id="tab-btn-donate" class="tab-btn">☕ 赞助投喂</button>
+      </div>
+
+      <!-- 兑换码专区 -->
+      <div id="tab-panel-vip" class="tab-panel active">
+        <div class="redeem-card">
+          <div class="redeem-title">输入特权兑换码</div>
+          <div class="redeem-input-row">
+            <input type="text" id="redeem-input" placeholder="输入兑换码 (如 DEVOUR666)" maxlength="20" autocomplete="off">
+            <button id="btn-submit-redeem" class="btn-redeem">立即兑换</button>
+          </div>
+          <div id="redeem-msg" class="redeem-msg"></div>
+        </div>
+
+        <div class="perks-list">
+          <div class="perk-item">
+            <div class="perk-icon">🪙</div>
+            <div class="perk-info">
+              <div class="perk-title">【DEVOUR666】成长狂欢礼包</div>
+              <div class="perk-desc">免费赠送 666 启动金币与专属荣耀</div>
+            </div>
+          </div>
+          <div class="perk-item">
+            <div class="perk-icon">⚡</div>
+            <div class="perk-info">
+              <div class="perk-title">【VIP888】新手进阶大礼包</div>
+              <div class="perk-desc">免费领 888 🪙 快速升级吸力与天赋</div>
+            </div>
+          </div>
+          <div class="perk-item">
+            <div class="perk-icon">👑</div>
+            <div class="perk-info">
+              <div class="perk-title">【GOLD888】日耀炽金限定皮肤</div>
+              <div class="perk-desc">解锁恒星耀斑冠冕，纯金粒子吞噬特效</div>
+            </div>
+          </div>
+          <div class="perk-item highlight-item">
+            <div class="perk-icon">🌌</div>
+            <div class="perk-info">
+              <div class="perk-title">【GOD2026】赞助者独占·赛博神明</div>
+              <div class="perk-desc">全光谱极光流光冠冕 + 移动速度永久加成 +20%！</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 赞助投喂专区 -->
+      <div id="tab-panel-donate" class="tab-panel" style="display: none;">
+        <div class="donate-card">
+          <p class="donate-intro">《吞噬进化Games》由独立开发者用业余时间倾心倾力打造，您的每一份支持都是持续更新全城破坏、新玩法与炫彩神级皮肤的动力！</p>
+          <div class="donate-tiers">
+            <div class="tier-pill">☕ 赞助 3 元 (投喂一杯咖啡)</div>
+            <div class="tier-pill">🍕 赞助 10 元 (解锁全套神级特权码)</div>
+          </div>
+          <div class="donate-actions">
+            <a id="btn-afdian-link" href="https://afdian.com" target="_blank" class="btn-afdian">⚡ 前往【爱发电】主页一键赞助</a>
+            <div class="donate-tip">💡 赞助后私信作者或通过订单号即可获得【GOD2026】专属神级兑换码！</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- 游戏主 HUD 界面 -->
   <div id="hud" style="display: none;">
     <!-- 顶部核心信息栏 -->
@@ -211,6 +287,7 @@
       </div>
       <div class="pause-actions">
         <button id="btn-resume-game" class="btn-start-game">继续游戏 (Resume)</button>
+        <button id="btn-pause-sponsor" class="btn-secondary" style="border-color: rgba(255, 215, 0, 0.4); color: #ffd700;">👑 赞助/特权兑换</button>
         <button id="btn-restart-game" class="btn-secondary">重新开局 (Restart)</button>
         <button id="btn-quit-game" class="btn-secondary">返回主页 (Quit)</button>
       </div>
@@ -265,6 +342,7 @@
       <div class="modal-actions">
         <button id="btn-douyin-share" class="btn-douyin-share">🎬 发布对局录屏至抖音 (领 3 倍金币)</button>
         <button id="btn-douyin-ad" class="btn-douyin-ad">📺 观看视频广告领 300 🪙</button>
+        <button id="btn-gameover-sponsor" class="btn-secondary" style="border-color: rgba(255, 215, 0, 0.4); color: #ffd700;">👑 赞助作者 / 特权兑换</button>
         <button id="btn-restart" class="btn-restart">再来一局 (Play Again)</button>
         <button id="btn-back-menu" class="btn-secondary">返回模式选择</button>
       </div>

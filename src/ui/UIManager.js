@@ -24,6 +24,7 @@ export class UIManager {
     this.skinsModal = document.getElementById('skins-modal');
     this.upgradesModal = document.getElementById('upgrades-modal');
     this.achievementsModal = document.getElementById('achievements-modal');
+    this.sponsorModal = document.getElementById('sponsor-modal');
     this.pauseModal = document.getElementById('pause-modal');
     this.radarCanvas = document.getElementById('radar-canvas');
     this.radarCtx = this.radarCanvas ? this.radarCanvas.getContext('2d') : null;
@@ -150,11 +151,88 @@ export class UIManager {
       };
     }
 
+    // 赞助作者与特权兑换弹窗绑定
+    this.initSponsorModal(onSkinChangedCallback, audioManager, refreshMenuAssets);
+
     // 成就触发横幅绑定
     AchievementManager.setToastHandler((achDef) => {
       this.showAchievementToast(achDef, audioManager);
       refreshMenuAssets();
     });
+  }
+
+  // 初始化赞助与特权兑换系统
+  initSponsorModal(onSkinChangedCallback, audioManager, refreshMenuAssets) {
+    const btnOpenSponsor = document.getElementById('btn-open-sponsor');
+    const btnCloseSponsor = document.getElementById('btn-close-sponsor');
+    const tabVip = document.getElementById('tab-btn-vip');
+    const tabDonate = document.getElementById('tab-btn-donate');
+    const panelVip = document.getElementById('tab-panel-vip');
+    const panelDonate = document.getElementById('tab-panel-donate');
+    const btnSubmit = document.getElementById('btn-submit-redeem');
+    const inputRedeem = document.getElementById('redeem-input');
+    const msgRedeem = document.getElementById('redeem-msg');
+
+    if (btnOpenSponsor) {
+      btnOpenSponsor.onclick = () => {
+        if (audioManager) audioManager.playClick();
+        if (this.sponsorModal) this.sponsorModal.style.display = 'flex';
+        if (msgRedeem) msgRedeem.textContent = '';
+      };
+    }
+
+    if (btnCloseSponsor) {
+      btnCloseSponsor.onclick = () => {
+        if (audioManager) audioManager.playClick();
+        if (this.sponsorModal) this.sponsorModal.style.display = 'none';
+        if (refreshMenuAssets) refreshMenuAssets();
+      };
+    }
+
+    if (tabVip && tabDonate) {
+      tabVip.onclick = () => {
+        if (audioManager) audioManager.playClick();
+        tabVip.classList.add('active');
+        tabDonate.classList.remove('active');
+        if (panelVip) panelVip.style.display = 'block';
+        if (panelDonate) panelDonate.style.display = 'none';
+      };
+
+      tabDonate.onclick = () => {
+        if (audioManager) audioManager.playClick();
+        tabDonate.classList.add('active');
+        tabVip.classList.remove('active');
+        if (panelDonate) panelDonate.style.display = 'block';
+        if (panelVip) panelVip.style.display = 'none';
+      };
+    }
+
+    if (btnSubmit && inputRedeem) {
+      btnSubmit.onclick = () => {
+        const code = inputRedeem.value.trim();
+        const res = StorageManager.redeemCode(code);
+        if (msgRedeem) {
+          msgRedeem.textContent = res.message;
+          msgRedeem.className = res.success ? 'redeem-msg success' : 'redeem-msg error';
+        }
+        if (res.success) {
+          if (audioManager) audioManager.playAchievement();
+          inputRedeem.value = '';
+          if (refreshMenuAssets) refreshMenuAssets();
+          const currentSkinId = StorageManager.getCurrentSkin();
+          const skinDef = GameConfig.SKINS.find(s => s.id === currentSkinId);
+          if (skinDef && onSkinChangedCallback) onSkinChangedCallback(skinDef);
+        } else {
+          if (audioManager) audioManager.playBlocked();
+        }
+      };
+
+      inputRedeem.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          btnSubmit.click();
+        }
+      });
+    }
   }
 
   // 渲染皮肤商店弹窗
@@ -345,6 +423,14 @@ export class UIManager {
         this.isPaused = false;
         this.pauseModal.style.display = 'none';
         if (onResumeCallback) onResumeCallback();
+      };
+    }
+
+    const btnPauseSponsor = document.getElementById('btn-pause-sponsor');
+    if (btnPauseSponsor) {
+      btnPauseSponsor.onclick = () => {
+        if (audioManager) audioManager.playClick();
+        if (this.sponsorModal) this.sponsorModal.style.display = 'flex';
       };
     }
 
@@ -646,6 +732,13 @@ export class UIManager {
           btnAd.disabled = true;
           btnAd.textContent = '✓ 观看完毕，+300 🪙 已入账！';
         });
+      };
+    }
+
+    const btnGameOverSponsor = document.getElementById('btn-gameover-sponsor');
+    if (btnGameOverSponsor) {
+      btnGameOverSponsor.onclick = () => {
+        if (this.sponsorModal) this.sponsorModal.style.display = 'flex';
       };
     }
 
