@@ -42,7 +42,9 @@ export class GameManager {
     this.scene.fog = new THREE.FogExp2(GameConfig.PALETTE.sky, 0.0075);
 
     const C = GameConfig.CAMERA;
-    this.camera = new THREE.PerspectiveCamera(C.FOV, width / height, 0.5, 600);
+    const aspect = width / height;
+    const fov = aspect < 1.0 ? Math.min(80, GameConfig.CAMERA.FOV / Math.pow(aspect, 0.65)) : C.FOV;
+    this.camera = new THREE.PerspectiveCamera(fov, aspect, 0.5, 600);
     this.camera.position.set(0, C.OFFSET_Y, C.OFFSET_Z);
     this.camera.lookAt(0, 0, C.LOOK_OFFSET_Z);
 
@@ -175,7 +177,13 @@ export class GameManager {
   onResize() {
     const width = window.innerWidth;
     const height = window.innerHeight;
-    this.camera.aspect = width / height;
+    const aspect = width / height;
+    this.camera.aspect = aspect;
+    if (aspect < 1.0) {
+      this.camera.fov = Math.min(80, GameConfig.CAMERA.FOV / Math.pow(aspect, 0.65));
+    } else {
+      this.camera.fov = GameConfig.CAMERA.FOV;
+    }
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height);
   }

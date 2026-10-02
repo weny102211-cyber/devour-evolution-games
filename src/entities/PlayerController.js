@@ -23,6 +23,8 @@ export class PlayerController {
 
     this.keys = { up: false, down: false, left: false, right: false };
 
+    this.touchId = null;
+
     this.initEventListeners();
   }
 
@@ -76,23 +78,41 @@ export class PlayerController {
       return !!target.closest('#start-screen, #pause-modal, #gameover-modal, #skins-modal, #upgrades-modal, #achievements-modal, #sponsor-modal, .overlay-modal, .interactive-btn, button, input, a');
     };
 
-    // 2. 触屏交互 (手机端全屏拖拽 + 虚拟摇杆无缝同步)
+    // 2. 触屏交互 (手游级动态浮动摇杆：手指按哪，摇杆就以该点为中心，彻底消除错位)
     const onTouchStart = (e) => {
       if (!this.hole.isAlive) return;
       if (isInteractive(e.target)) return;
-      const touch = e.touches[0];
-      if (touch) this.handleDragStart(touch.clientX, touch.clientY);
+
+      if (this.touchId === null && e.changedTouches && e.changedTouches.length > 0) {
+        const touch = e.changedTouches[0];
+        // 避开最顶部系统状态栏区域
+        if (touch.clientY > 60) {
+          this.touchId = touch.identifier;
+          this.handleDragStart(touch.clientX, touch.clientY);
+        }
+      }
     };
 
     const onTouchMove = (e) => {
-      if (!this.isDragging) return;
+      if (!this.isDragging || this.touchId === null) return;
       if (e.cancelable) e.preventDefault();
-      const touch = e.touches[0];
-      if (touch) this.handleDragMove(touch.clientX, touch.clientY);
+
+      for (let i = 0; i < e.touches.length; i++) {
+        if (e.touches[i].identifier === this.touchId) {
+          this.handleDragMove(e.touches[i].clientX, e.touches[i].clientY);
+          break;
+        }
+      }
     };
 
-    const onTouchEnd = () => {
-      if (this.isDragging) this.handleDragEnd();
+    const onTouchEnd = (e) => {
+      if (!this.isDragging || this.touchId === null) return;
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === this.touchId) {
+          this.handleDragEnd();
+          break;
+        }
+      }
     };
 
     window.addEventListener('touchstart', onTouchStart, { passive: false });
@@ -102,17 +122,20 @@ export class PlayerController {
 
     // 3. 鼠标交互 (PC 端拖拽或点击推杆)
     const onMouseDown = (e) => {
+      if (this.touchId !== null) return;
       if (!this.hole.isAlive) return;
       if (isInteractive(e.target)) return;
       this.handleDragStart(e.clientX, e.clientY);
     };
 
     const onMouseMove = (e) => {
+      if (this.touchId !== null) return;
       if (!this.isDragging) return;
       this.handleDragMove(e.clientX, e.clientY);
     };
 
     const onMouseUp = () => {
+      if (this.touchId !== null) return;
       if (this.isDragging) this.handleDragEnd();
     };
 
@@ -128,6 +151,17 @@ export class PlayerController {
 
     if (this.joyBase) {
       this.joyBase.classList.add('active');
+      // 动态将底盘移动到触摸中心，完美贴合手指位置
+      this.joyBase.style.position = 'fixed';
+      this.joyBase.style.left = `${clientX}px`;
+      this.joyBase.style.top = `${clientY}px`;
+      this.joyBase.style.bottom = 'auto';
+      this.joyBase.style.right = 'auto';
+      this.joyBase.style.transform = 'translate(-50%, -50%)';
+      this.joyBase.style.opacity = '1';
+    }
+    if (this.joyKnob) {
+      this.joyKnob.style.transform = 'translate(0px, 0px)';
     }
   }
 
@@ -136,7 +170,7 @@ export class PlayerController {
     const delta = new THREE.Vector2().subVectors(this.dragCurrent, this.dragOrigin);
     const dist = delta.length();
 
-    if (dist > 3) {
+    if (dist > 2) {
       const clamped = Math.min(dist, this.maxJoystickRadius);
       const norm = delta.clone().normalize();
       this.inputDir.copy(norm).multiplyScalar(clamped / this.maxJoystickRadius);
@@ -157,10 +191,19 @@ export class PlayerController {
 
   handleDragEnd() {
     this.isDragging = false;
+    this.touchId = null;
     this.inputDir.set(0, 0);
 
     if (this.joyBase) {
       this.joyBase.classList.remove('active');
+      // 抬手后平滑复位到预设停泊底盘
+      this.joyBase.style.position = 'absolute';
+      this.joyBase.style.left = '';
+      this.joyBase.style.top = '';
+      this.joyBase.style.bottom = '';
+      this.joyBase.style.right = '';
+      this.joyBase.style.transform = '';
+      this.joyBase.style.opacity = '';
     }
     if (this.joyKnob) {
       this.joyKnob.style.transform = 'translate(0px, 0px)';
