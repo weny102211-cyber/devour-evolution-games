@@ -35,8 +35,11 @@ export class AudioManager {
   }
 
   ensureContext() {
+    if (!this.ctx) {
+      this.initAudioContext();
+    }
     if (this.ctx && this.ctx.state === 'suspended') {
-      this.ctx.resume();
+      this.ctx.resume().catch(() => {});
     }
   }
 
@@ -46,6 +49,28 @@ export class AudioManager {
       this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : 0.7, this.ctx.currentTime);
     }
     return this.isMuted;
+  }
+
+  // 阻挡/错误提示音：短促低沉蜂鸣
+  playBlocked() {
+    if (this.isMuted || !this.ctx) return;
+    this.ensureContext();
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(160, t);
+    osc.frequency.linearRampToValueAtTime(70, t + 0.12);
+
+    gain.gain.setValueAtTime(0.25, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.13);
+
+    osc.connect(gain);
+    gain.connect(this.sfxGain);
+
+    osc.start(t);
+    osc.stop(t + 0.14);
   }
 
   // 吞噬小物体：轻快水泡泡弹射音

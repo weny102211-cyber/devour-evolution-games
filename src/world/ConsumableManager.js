@@ -83,7 +83,7 @@ export class ConsumableManager {
   }
 
   // 每帧更新：处理所有黑洞对附近物体的引力、尺寸碰撞与下沉吞噬动画
-  update(delta, holes, onSwallowedCallback, onBlockedCallback) {
+  update(delta, holes, onSwallowedCallback, onBlockedCallback, isEndless = false) {
     // 1. 处理所有活跃黑洞对周围物体的引力检测
     for (const hole of holes) {
       if (!hole.isAlive) continue;
@@ -190,6 +190,10 @@ export class ConsumableManager {
         obj.userData.isSwallowed = true;
         obj.userData.isSucking = false;
         obj.visible = false;
+        if (isEndless) {
+          // 无尽模式下，15-25秒后平滑重生物资，确保城市生生不息
+          obj.userData.respawnTimer = 15.0 + Math.random() * 10.0;
+        }
         this.suckingObjects.splice(i, 1);
 
         // 回调黑洞成长和分数结算
@@ -198,6 +202,33 @@ export class ConsumableManager {
         }
       }
     }
+
+    // 4. 无尽模式物资动态平滑重生机制
+    if (isEndless) {
+      for (let i = 0; i < this.objects.length; i++) {
+        const obj = this.objects[i];
+        if (obj.userData.isSwallowed && obj.userData.respawnTimer > 0) {
+          obj.userData.respawnTimer -= delta;
+          if (obj.userData.respawnTimer <= 0) {
+            this.respawnObject(obj);
+          }
+        }
+      }
+    }
+  }
+
+  // 重生已被吞噬的物体 (无尽模式专属)
+  respawnObject(obj) {
+    obj.userData.isSwallowed = false;
+    obj.userData.isSucking = false;
+    obj.userData.suckingHole = null;
+    obj.userData.wobbleTimer = 0;
+    obj.userData.respawnTimer = 0;
+    obj.position.copy(obj.userData.initialPos);
+    obj.rotation.copy(obj.userData.initialRot);
+    obj.scale.copy(obj.userData.initialScale);
+    obj.visible = true;
+    this.addToGrid(obj);
   }
 
   // 重置所有物体 (用于再来一局)
@@ -215,6 +246,7 @@ export class ConsumableManager {
       obj.userData.isSucking = false;
       obj.userData.suckingHole = null;
       obj.userData.wobbleTimer = 0;
+      obj.userData.respawnTimer = 0;
       this.activeObjects.push(obj);
       this.addToGrid(obj);
     }

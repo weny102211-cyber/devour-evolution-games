@@ -6,6 +6,7 @@ export class ParticleSystem {
     this.scene = scene;
     this.particles = []; // 活跃粒子队列
     this.shockwaves = []; // 活跃光环扩散
+    this.sparkMats = new Map(); // 材质复用池，杜绝频繁 GC
     this.initPool();
   }
 
@@ -16,10 +17,20 @@ export class ParticleSystem {
     this.ringGeo.rotateX(-Math.PI / 2);
   }
 
+  getSparkMaterial(color) {
+    if (!this.sparkMats.has(color)) {
+      this.sparkMats.set(color, new THREE.MeshBasicMaterial({ color }));
+    }
+    return this.sparkMats.get(color);
+  }
+
   // 物体吞噬爆星特效
   emitSwallowBurst(x, y, z, color = 0x00ffcc, count = 8, scale = 1.0) {
-    for (let i = 0; i < count; i++) {
-      const mat = new THREE.MeshBasicMaterial({ color });
+    if (this.particles.length >= 120) return; // 移动端性能保护上限
+    const burstCount = Math.min(count, 120 - this.particles.length);
+    const mat = this.getSparkMaterial(color);
+
+    for (let i = 0; i < burstCount; i++) {
       const mesh = new THREE.Mesh(this.sparkGeo, mat);
       mesh.position.set(x, Math.max(0.1, y), z);
 
@@ -78,8 +89,6 @@ export class ParticleSystem {
 
       if (p.life <= 0) {
         this.scene.remove(p.mesh);
-        p.mesh.geometry.dispose();
-        p.mesh.material.dispose();
         this.particles.splice(i, 1);
         continue;
       }
@@ -115,7 +124,6 @@ export class ParticleSystem {
   clear() {
     for (const p of this.particles) {
       this.scene.remove(p.mesh);
-      p.mesh.material.dispose();
     }
     this.particles = [];
 

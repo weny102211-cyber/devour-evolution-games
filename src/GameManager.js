@@ -24,6 +24,7 @@ export class GameManager {
     this.elapsedTime = 0;
     this.maxRadiusReached = GameConfig.LEVELS[0].radius;
     this.lastTickSoundTime = 0;
+    this.animFrameId = null;
 
     this.initScene();
     this.initSystems();
@@ -170,8 +171,10 @@ export class GameManager {
       this.audio.ensureContext();
       this.audio.startBGM();
       window.removeEventListener('pointerdown', startAudioOnFirstTouch);
+      window.removeEventListener('touchstart', startAudioOnFirstTouch);
     };
     window.addEventListener('pointerdown', startAudioOnFirstTouch);
+    window.addEventListener('touchstart', startAudioOnFirstTouch, { passive: true });
   }
 
   onResize() {
@@ -190,6 +193,11 @@ export class GameManager {
 
   // 启动对局 (依选择模式执行初始化)
   startMatch(mode = GameModes.BATTLE) {
+    if (this.animFrameId) {
+      cancelAnimationFrame(this.animFrameId);
+      this.animFrameId = null;
+    }
+
     this.mode = mode;
     this.isRunning = true;
     this.isPaused = false;
@@ -233,12 +241,15 @@ export class GameManager {
     } catch (e) {
       console.warn('[GameManager] Platform start error caught:', e);
     }
-    requestAnimationFrame((t) => this.loop(t));
+    this.animFrameId = requestAnimationFrame((t) => this.loop(t));
   }
 
   loop() {
-    if (!this.isRunning) return;
-    requestAnimationFrame((t) => this.loop(t));
+    if (!this.isRunning) {
+      this.animFrameId = null;
+      return;
+    }
+    this.animFrameId = requestAnimationFrame((t) => this.loop(t));
 
     const now = performance.now();
     const delta = Math.min((now - this.lastFrameTime) / 1000, 0.1);
@@ -303,7 +314,8 @@ export class GameManager {
       delta,
       activeHoles,
       (hole, obj) => this.onObjectSwallowed(hole, obj),
-      (blockedObj) => this.onPlayerBlocked(blockedObj)
+      (blockedObj) => this.onPlayerBlocked(blockedObj),
+      isEndless
     );
 
     // 5. 局内掉落道具更新与拾取判定
@@ -470,6 +482,10 @@ export class GameManager {
 
   onMatchComplete() {
     this.isRunning = false;
+    if (this.animFrameId) {
+      cancelAnimationFrame(this.animFrameId);
+      this.animFrameId = null;
+    }
     this.audio.playGameOver();
 
     DouyinPlatform.gameplayStop();
@@ -499,6 +515,11 @@ export class GameManager {
   returnToHome() {
     this.isRunning = false;
     this.isPaused = false;
+    if (this.animFrameId) {
+      cancelAnimationFrame(this.animFrameId);
+      this.animFrameId = null;
+    }
+    this.audio.stopBGM();
     this.player.reset(0, 14);
     this.consumables.resetAll();
     this.powerUpMgr.reset();

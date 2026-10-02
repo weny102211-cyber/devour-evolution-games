@@ -72,10 +72,10 @@ export class PlayerController {
       }
     });
 
-    // 辅助检查是否点击在菜单/弹窗/按钮上
+    // 辅助检查是否点击在菜单/弹窗/按钮/HUD顶栏底栏上
     const isInteractive = (target) => {
       if (!target || typeof target.closest !== 'function') return false;
-      return !!target.closest('#start-screen, #pause-modal, #gameover-modal, #skins-modal, #upgrades-modal, #achievements-modal, #sponsor-modal, .overlay-modal, .interactive-btn, button, input, a');
+      return !!target.closest('#start-screen, #pause-modal, #gameover-modal, #skins-modal, #upgrades-modal, #achievements-modal, #sponsor-modal, .overlay-modal, .interactive-btn, button, input, a, .top-bar, .radar-box, .bottom-bar, #active-buffs');
     };
 
     // 2. 触屏交互 (手游级动态浮动摇杆：手指按哪，摇杆就以该点为中心，彻底消除错位)
