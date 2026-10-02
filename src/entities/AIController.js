@@ -35,6 +35,9 @@ export class AIController {
         profile,
         targetPos: new THREE.Vector2(pos[0], pos[1]),
         moveDir: new THREE.Vector2(0, 0),
+        currentDir: new THREE.Vector2(0, 0),
+        wanderDir: new THREE.Vector2(Math.random() - 0.5, Math.random() - 0.5).normalize(),
+        wanderTimer: Math.random() * 3.0,
         state: 'FORAGE', // FLEE, CHASE, FORAGE, WANDER
         decisionTimer: (idx * 0.03), // 错峰分时更新
         targetObj: null,
@@ -191,25 +194,32 @@ export class AIController {
       ai.moveDir.set(tx / len, tz / len);
     } else {
       // ----------------------------------------------------
-      // 第四优先级：周边巡逻探索 (WANDER)
+      // 第四优先级：稳定周边巡逻探索 (WANDER - 杜绝抽搐打转)
       // ----------------------------------------------------
       ai.state = 'WANDER';
-      if (Math.random() < 0.25 || ai.moveDir.lengthSq() < 0.01) {
+      ai.wanderTimer -= this.decisionInterval;
+      if (ai.wanderTimer <= 0 || ai.wanderDir.lengthSq() < 0.01) {
+        // 保持航向 2.5 ~ 4.5 秒，模拟有目的地的平滑巡游
+        ai.wanderTimer = 2.5 + Math.random() * 2.0;
         const randAngle = Math.random() * Math.PI * 2;
-        ai.moveDir.set(Math.cos(randAngle), Math.sin(randAngle));
+        ai.wanderDir.set(Math.cos(randAngle), Math.sin(randAngle));
       }
+      ai.moveDir.copy(ai.wanderDir);
     }
 
-    // 边界斥力避障：靠近城市外墙自动回弹
-    const bound = GameConfig.MAP_HALF - 8;
-    if (hole.x > bound) ai.moveDir.x -= 1.8;
-    if (hole.x < -bound) ai.moveDir.x += 1.8;
-    if (hole.z > bound) ai.moveDir.y -= 1.8;
-    if (hole.z < -bound) ai.moveDir.y += 1.8;
-    ai.moveDir.normalize();
+    // 边界斥力避障：靠近城市外墙自动平滑回弹
+    const bound = GameConfig.MAP_HALF - 15;
+    if (hole.x > bound) ai.moveDir.x -= 2.2;
+    if (hole.x < -bound) ai.moveDir.x += 2.2;
+    if (hole.z > bound) ai.moveDir.y -= 2.2;
+    if (hole.z < -bound) ai.moveDir.y += 2.2;
+
+    if (ai.moveDir.lengthSq() > 0.001) {
+      ai.moveDir.normalize();
+    }
   }
 
-  // 执行 AI 物理移动
+  // 执行 AI 物理移动 (带平滑转向插值，消除瞬间硬掰瞬移感)
   executeMovement(ai, delta) {
     const hole = ai.hole;
     const curSpeed = Math.max(
@@ -217,8 +227,11 @@ export class AIController {
       GameConfig.BASE_SPEED * 0.92 - (hole.level - 1) * GameConfig.SPEED_DECAY_PER_LEVEL
     );
 
-    const mx = ai.moveDir.x * curSpeed * delta;
-    const mz = ai.moveDir.y * curSpeed * delta;
+    // 平滑方向转向插值
+    ai.currentDir.lerp(ai.moveDir, delta * 5.5);
+
+    const mx = ai.currentDir.x * curSpeed * delta;
+    const mz = ai.currentDir.y * curSpeed * delta;
 
     hole.setPosition(hole.x + mx, hole.z + mz);
   }
@@ -231,6 +244,9 @@ export class AIController {
       const pos = spawnPositions[idx] || [0, 0];
       item.hole.reset(pos[0], pos[1]);
       item.moveDir.set(0, 0);
+      item.currentDir.set(0, 0);
+      item.wanderDir.set(Math.random() - 0.5, Math.random() - 0.5).normalize();
+      item.wanderTimer = Math.random() * 3.0;
       item.state = 'FORAGE';
       item.decisionTimer = idx * 0.03;
     });

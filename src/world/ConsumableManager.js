@@ -111,28 +111,28 @@ export class ConsumableManager {
           this.removeFromGrid(obj);
           this.suckingObjects.push(obj);
         } else if (dist <= suctionRange && canSwallow) {
-          // 强化向心强力吸附拉扯
+          // 真正的黑洞漩涡流体物理 (径向向心力 + 切向漩涡螺旋力)
           const factor = Math.max(0, 1.0 - dist / suctionRange);
-          const pullForce = Math.pow(factor, 1.2) * delta * 24.0;
+          const pullForce = Math.pow(factor, 1.1) * delta * 26.0;
+
+          // 径向向心拉扯
           obj.position.x += (dx / dist) * pullForce;
           obj.position.z += (dz / dist) * pullForce;
-          // 朝黑洞中心自然倾斜翻滚
-          obj.rotation.x += (dz / dist) * delta * 4.0;
-          obj.rotation.z -= (dx / dist) * delta * 4.0;
-        } else if (dist < hole.radius + objRadius * 0.72 && !canSwallow) {
-          // 尺寸不足大建筑/大型载具物理阻挡：将黑洞向外反弹推移，杜绝虚空穿透
-          if (obj.userData.level >= 4) {
-            const overlap = (hole.radius + objRadius * 0.72) - dist;
-            if (dist > 0.05) {
-              const pushX = (dx / dist) * overlap * 0.85;
-              const pushZ = (dz / dist) * overlap * 0.85;
-              hole.setPosition(hole.x + pushX, hole.z + pushZ);
-            }
-          }
-          // 触发微弱弹性回弹与阻挡震屏
+
+          // 切向漩涡旋转偏移 (产生类似真正黑洞吸积盘的漩涡手感)
+          const swirlSpeed = factor * delta * 8.0;
+          obj.position.x += (-dz / dist) * swirlSpeed;
+          obj.position.z += (dx / dist) * swirlSpeed;
+
+          // 随着靠近黑洞边缘，向洞心自然倾斜翻倒
+          const tiltFactor = Math.min(1.2, (hole.radius / (dist + 0.5)));
+          obj.rotation.x = THREE.MathUtils.lerp(obj.rotation.x, (dz / dist) * tiltFactor, delta * 8.0);
+          obj.rotation.z = THREE.MathUtils.lerp(obj.rotation.z, (-dx / dist) * tiltFactor, delta * 8.0);
+        } else if (dist < hole.radius + objRadius * 0.75 && !canSwallow) {
+          // 尺寸不足：物体自然弹性微晃，杜绝强行移位黑洞造成的高频剧烈抽搐
           if (obj.userData.wobbleTimer <= 0) {
             obj.userData.wobbleTimer = 0.28;
-            obj.userData.wobbleDir.set(-dx / dist, 0, -dz / dist);
+            obj.userData.wobbleDir.set(-dx / (dist || 1), 0, -dz / (dist || 1));
             if (hole.isPlayer && onBlockedCallback) {
               onBlockedCallback(obj);
             }
@@ -155,7 +155,7 @@ export class ConsumableManager {
       }
     }
 
-    // 3. 更新正在被吸入/掉落/缩小的物体动画
+    // 3. 更新正在被吸入/掉落/缩小的物体动画 (经典 Hole.io 漩涡漏斗坠落)
     for (let i = this.suckingObjects.length - 1; i >= 0; i--) {
       const obj = this.suckingObjects[i];
       const hole = obj.userData.suckingHole;
@@ -171,23 +171,26 @@ export class ConsumableManager {
         continue;
       }
 
-      obj.userData.sinkProgress += delta * 4.6;
+      obj.userData.sinkProgress += delta * 4.8;
       const t = Math.min(obj.userData.sinkProgress, 1.0);
 
-      // 向黑洞中心平滑加速吸附
-      obj.position.x = THREE.MathUtils.lerp(obj.position.x, hole.x, delta * 18.0);
-      obj.position.z = THREE.MathUtils.lerp(obj.position.z, hole.z, delta * 18.0);
+      // 向黑洞深渊中心盘旋下沉 (加速旋转 + 螺旋向心收缩)
+      const curDist = Math.hypot(obj.position.x - hole.x, obj.position.z - hole.z);
+      const orbitSpeed = (12.0 + t * 16.0) * delta;
+      const angle = Math.atan2(obj.position.z - hole.z, obj.position.x - hole.x) + orbitSpeed;
+      const newRadius = THREE.MathUtils.lerp(curDist, 0.05, delta * 15.0);
 
-      // 旋转翻滚倾倒下陷
-      const fallRotSpeed = obj.userData.level <= 3 ? 16.0 : 8.0;
-      obj.rotation.x += delta * fallRotSpeed;
-      obj.rotation.z += delta * (fallRotSpeed * 0.7);
+      obj.position.x = hole.x + Math.cos(angle) * newRadius;
+      obj.position.z = hole.z + Math.sin(angle) * newRadius;
 
-      // 坠落入地下深渊漏斗中
-      obj.position.y -= delta * (obj.userData.height * 2.8 + 3.8);
+      // 翻滚倾倒与高速下潜
+      obj.rotation.x += delta * 14.0;
+      obj.rotation.y += delta * 18.0;
+      obj.rotation.z += delta * 10.0;
+      obj.position.y -= delta * (obj.userData.height * 3.2 + 5.5);
 
-      // 缩放压扁缩小消失
-      const currentScale = Math.max(0.01, 1.0 - t * 0.98);
+      // 缩放压扁缩小消失 (平滑衰减曲线)
+      const currentScale = Math.max(0.01, Math.pow(1.0 - t, 1.4));
       obj.scale.set(
         obj.userData.initialScale.x * currentScale,
         obj.userData.initialScale.y * currentScale,

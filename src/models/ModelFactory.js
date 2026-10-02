@@ -983,4 +983,503 @@ export class ModelFactory {
     group.userData = { radius: 2.2, height: 7.5, level: 6, score: 320, name: '霓虹巨幅广告牌' };
     return group;
   }
+
+  // 1. 标志性巨型甜甜圈烘焙工坊 (Level 7 街头标志性建筑)
+  createDonutShop() {
+    const group = new THREE.Group();
+    const w = 7.0, h = 3.6, d = 6.2;
+
+    // 奶油色主店面
+    const storeGeo = new THREE.BoxGeometry(w, h, d);
+    const storeMat = this.getColoredMat(0xfff5ee);
+    const store = new THREE.Mesh(storeGeo, storeMat);
+    store.position.y = h / 2;
+    group.add(store);
+
+    // 粉色店面雨棚
+    const awningGeo = new THREE.BoxGeometry(w + 0.4, 0.25, 1.4);
+    awningGeo.rotateX(0.2);
+    const awningMat = this.getColoredMat(0xff69b4);
+    const awning = new THREE.Mesh(awningGeo, awningMat);
+    awning.position.set(0, 2.7, d / 2 + 0.5);
+    group.add(awning);
+
+    // 落地大玻璃窗
+    const winGeo = new THREE.BoxGeometry(w * 0.75, 1.8, 0.1);
+    const win = new THREE.Mesh(winGeo, this.materials.glass);
+    win.position.set(0, 1.4, d / 2 + 0.05);
+    group.add(win);
+
+    // 屋顶支撑架
+    const bracketGeo = new THREE.BoxGeometry(1.2, 0.8, 1.2);
+    const bracketMat = this.materials.metalDark;
+    const bracket = new THREE.Mesh(bracketGeo, bracketMat);
+    bracket.position.set(0, h + 0.4, 0);
+    group.add(bracket);
+
+    // 巨型 3D 甜甜圈 (金黄面团 + 粉红草莓糖霜 + 彩色糖粒)
+    const donutDoughGeo = new THREE.TorusGeometry(1.6, 0.65, 12, 24);
+    const donutDoughMat = this.getColoredMat(0xdeb887);
+    const donut = new THREE.Mesh(donutDoughGeo, donutDoughMat);
+    donut.rotation.x = Math.PI / 2;
+    donut.position.set(0, h + 2.0, 0);
+    group.add(donut);
+
+    // 草莓糖霜顶层
+    const glazeGeo = new THREE.TorusGeometry(1.62, 0.55, 10, 20);
+    const glazeMat = this.getColoredMat(0xff1493);
+    const glaze = new THREE.Mesh(glazeGeo, glazeMat);
+    glaze.rotation.x = Math.PI / 2;
+    glaze.position.set(0, h + 2.22, 0);
+    group.add(glaze);
+
+    // 散落在糖霜上的彩色糖针
+    const sprinkleColors = [0xffffff, 0x00f0ff, 0xffeb3b, 0x76ff03, 0xff5722];
+    for (let i = 0; i < 10; i++) {
+      const spAng = (i / 10) * Math.PI * 2;
+      const spR = 1.6 + (Math.random() - 0.5) * 0.4;
+      const spGeo = new THREE.BoxGeometry(0.12, 0.08, 0.28);
+      const spMat = this.getColoredMat(sprinkleColors[i % sprinkleColors.length]);
+      const sp = new THREE.Mesh(spGeo, spMat);
+      sp.position.set(Math.cos(spAng) * spR, h + 2.65, Math.sin(spAng) * spR);
+      sp.rotation.y = Math.random() * Math.PI;
+      group.add(sp);
+    }
+
+    group.userData = { radius: 4.2, height: h + 3.8, level: 7, score: 620, name: '巨型甜甜圈工坊' };
+    return group;
+  }
+
+  // 2. 标志性公路加油站 (Level 8 复合大型设施)
+  createGasStation() {
+    const group = new THREE.Group();
+    // 1. 加油岛长方形遮雨棚 (宽 13m, 进深 7.5m, 离地 4.8m)
+    const canopyW = 13.0, canopyD = 7.5;
+    const canopyGeo = new THREE.BoxGeometry(canopyW, 0.6, canopyD);
+    const canopyMat = this.getColoredMat(0xf8f9fa);
+    const canopy = new THREE.Mesh(canopyGeo, canopyMat);
+    canopy.position.y = 4.8;
+    group.add(canopy);
+
+    // 红色品牌饰条
+    const trimGeo = new THREE.BoxGeometry(canopyW + 0.2, 0.35, canopyD + 0.2);
+    const trimMat = this.getColoredMat(0xe74c3c);
+    const trim = new THREE.Mesh(trimGeo, trimMat);
+    trim.position.y = 4.95;
+    group.add(trim);
+
+    // 4 根承重钢立柱
+    const pillarGeo = new THREE.CylinderGeometry(0.25, 0.25, 4.8, 10);
+    const pillarMat = this.getColoredMat(0xbdc3c7);
+    const pOffsets = [
+      [-4.5, -2.2], [4.5, -2.2],
+      [-4.5, 2.2],  [4.5, 2.2]
+    ];
+    pOffsets.forEach(([px, pz]) => {
+      const pillar = new THREE.Mesh(pillarGeo, pillarMat);
+      pillar.position.set(px, 2.4, pz);
+      group.add(pillar);
+    });
+
+    // 4 台加油机与安全岛台
+    const islandGeo = new THREE.BoxGeometry(2.4, 0.22, 1.2);
+    const islandMat = this.materials.curb;
+    const pumpGeo = new THREE.BoxGeometry(0.9, 1.5, 0.5);
+    const pumpMat = this.getColoredMat(0xe74c3c);
+
+    const pumpSpots = [-3.2, 3.2];
+    pumpSpots.forEach(px => {
+      const island = new THREE.Mesh(islandGeo, islandMat);
+      island.position.set(px, 0.11, 0);
+      const pump = new THREE.Mesh(pumpGeo, pumpMat);
+      pump.position.set(px, 0.22 + 0.75, 0);
+
+      // 加油枪管微细节
+      const nozzleGeo = new THREE.BoxGeometry(0.12, 0.6, 0.6);
+      const nozzleMat = this.materials.metalDark;
+      const nozzle = new THREE.Mesh(nozzleGeo, nozzleMat);
+      nozzle.position.set(px, 1.1, 0);
+
+      group.add(island, pump, nozzle);
+    });
+
+    // 便捷便利店附属建筑 (位于遮雨棚后方)
+    const storeW = 9.0, storeH = 3.4, storeD = 4.8;
+    const storeGeo = new THREE.BoxGeometry(storeW, storeH, storeD);
+    const storeMat = this.getColoredMat(0xecf0f1);
+    const store = new THREE.Mesh(storeGeo, storeMat);
+    store.position.set(0, storeH / 2, 7.5);
+    group.add(store);
+
+    // 便利店落地玻璃门
+    const storeWinGeo = new THREE.BoxGeometry(storeW * 0.7, 2.0, 0.1);
+    const storeWin = new THREE.Mesh(storeWinGeo, this.materials.glass);
+    storeWin.position.set(0, 1.3, 7.5 - storeD / 2 - 0.05);
+    group.add(storeWin);
+
+    // 独立油价立牌灯箱 (Price Totem)
+    const totemPoleGeo = new THREE.BoxGeometry(0.3, 6.0, 0.3);
+    const totemPole = new THREE.Mesh(totemPoleGeo, this.materials.metalDark);
+    totemPole.position.set(7.2, 3.0, -3.0);
+    const totemSignGeo = new THREE.BoxGeometry(1.6, 2.4, 0.35);
+    const totemSignMat = this.getColoredMat(0xe74c3c);
+    const totemSign = new THREE.Mesh(totemSignGeo, totemSignMat);
+    totemSign.position.set(7.2, 5.0, -3.0);
+    group.add(totemPole, totemSign);
+
+    group.userData = { radius: 6.8, height: 6.5, level: 8, score: 920, name: '全服务公路加油站' };
+    return group;
+  }
+
+  // 3. 快乐汉堡快餐厅 (Level 7 街头特色餐饮)
+  createFastFood() {
+    const group = new THREE.Group();
+    const w = 7.5, h = 3.6, d = 6.5;
+
+    // 红白双色现代快餐门店
+    const bodyGeo = new THREE.BoxGeometry(w, h, d);
+    const bodyMat = this.getColoredMat(0xffffff);
+    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    body.position.y = h / 2;
+    group.add(body);
+
+    // 红色腰线
+    const stripeGeo = new THREE.BoxGeometry(w + 0.1, 0.5, d + 0.1);
+    const stripeMat = this.getColoredMat(0xd32f2f);
+    const stripe = new THREE.Mesh(stripeGeo, stripeMat);
+    stripe.position.y = 2.8;
+    group.add(stripe);
+
+    // 玻璃幕墙
+    const winGeo = new THREE.BoxGeometry(w * 0.65, 1.6, 0.1);
+    const win = new THREE.Mesh(winGeo, this.materials.glass);
+    win.position.set(0, 1.4, d / 2 + 0.06);
+    group.add(win);
+
+    // 屋顶标志性 3D 大汉堡
+    const burgerGroup = new THREE.Group();
+    burgerGroup.position.set(0, h + 0.3, 0);
+
+    // 下底面包
+    const botBunGeo = new THREE.CylinderGeometry(1.3, 1.2, 0.35, 16);
+    const bunMat = this.getColoredMat(0xd4a373);
+    const botBun = new THREE.Mesh(botBunGeo, bunMat);
+    botBun.position.y = 0.18;
+    burgerGroup.add(botBun);
+
+    // 肉饼
+    const pattyGeo = new THREE.CylinderGeometry(1.35, 1.35, 0.28, 16);
+    const pattyMat = this.getColoredMat(0x4a2810);
+    const patty = new THREE.Mesh(pattyGeo, pattyMat);
+    patty.position.y = 0.45;
+    burgerGroup.add(patty);
+
+    // 芝士黄片
+    const cheeseGeo = new THREE.BoxGeometry(1.6, 0.08, 1.6);
+    cheeseGeo.rotateY(0.4);
+    const cheeseMat = this.getColoredMat(0xffca28);
+    const cheese = new THREE.Mesh(cheeseGeo, cheeseMat);
+    cheese.position.y = 0.62;
+    burgerGroup.add(cheese);
+
+    // 绿生菜层
+    const lettuceGeo = new THREE.CylinderGeometry(1.42, 1.4, 0.15, 16);
+    const lettuceMat = this.getColoredMat(0x43a047);
+    const lettuce = new THREE.Mesh(lettuceGeo, lettuceMat);
+    lettuce.position.y = 0.74;
+    burgerGroup.add(lettuce);
+
+    // 顶层面包 (半球形)
+    const topBunGeo = new THREE.SphereGeometry(1.3, 16, 10, 0, Math.PI * 2, 0, Math.PI * 0.5);
+    const topBun = new THREE.Mesh(topBunGeo, bunMat);
+    topBun.position.y = 0.82;
+    burgerGroup.add(topBun);
+
+    group.add(burgerGroup);
+
+    group.userData = { radius: 4.6, height: h + 2.4, level: 7, score: 680, name: '快乐汉堡快餐厅' };
+    return group;
+  }
+
+  // 4. 摩天塔吊市政施工现场 (Level 9 超大型地标建筑)
+  createConstructionSite() {
+    const group = new THREE.Group();
+
+    // 1. 周边防护围挡与水泥地基
+    const baseW = 13.0, baseD = 13.0;
+    const foundationGeo = new THREE.BoxGeometry(baseW, 0.4, baseD);
+    const foundationMat = this.materials.curb;
+    const foundation = new THREE.Mesh(foundationGeo, foundationMat);
+    foundation.position.y = 0.2;
+    group.add(foundation);
+
+    // 未完工混凝土框架剪力墙 (未封顶大楼)
+    const wallGeo = new THREE.BoxGeometry(7.0, 7.5, 7.0);
+    const wallMat = this.getColoredMat(0x7f8c8d);
+    const wall = new THREE.Mesh(wallGeo, wallMat);
+    wall.position.set(-1.5, 4.0, -1.5);
+    group.add(wall);
+
+    // 绿化防护密目安全网
+    const netGeo = new THREE.BoxGeometry(7.2, 3.2, 7.2);
+    const netMat = this.getColoredMat(0x27ae60);
+    const net = new THREE.Mesh(netGeo, netMat);
+    net.position.set(-1.5, 8.5, -1.5);
+    group.add(net);
+
+    // 2. 标志性黄色重型塔式起重机 (Tower Crane)
+    const craneGroup = new THREE.Group();
+    craneGroup.position.set(3.5, 0, 3.5);
+    const craneYellow = this.getColoredMat(0xf1c40f);
+
+    // 塔身高耸立柱 (高达 17 米)
+    const mastGeo = new THREE.BoxGeometry(0.8, 17.0, 0.8);
+    const mast = new THREE.Mesh(mastGeo, craneYellow);
+    mast.position.y = 8.5;
+    craneGroup.add(mast);
+
+    // 驾驶操纵舱
+    const cabinGeo = new THREE.BoxGeometry(1.2, 1.4, 1.2);
+    const cabin = new THREE.Mesh(cabinGeo, craneYellow);
+    cabin.position.set(0, 16.5, 0);
+    craneGroup.add(cabin);
+
+    // 水平起重臂 (前臂长 10m, 后平衡臂长 4.5m)
+    const jibGeo = new THREE.BoxGeometry(15.0, 0.6, 0.6);
+    const jib = new THREE.Mesh(jibGeo, craneYellow);
+    jib.position.set(2.8, 17.2, 0);
+    craneGroup.add(jib);
+
+    // 尾部水泥配重块
+    const counterGeo = new THREE.BoxGeometry(2.0, 1.0, 1.2);
+    const counterMat = this.materials.curb;
+    const counter = new THREE.Mesh(counterGeo, counterMat);
+    counter.position.set(-3.5, 17.0, 0);
+    craneGroup.add(counter);
+
+    // 吊钩钢缆与配重吊钩
+    const cableGeo = new THREE.CylinderGeometry(0.04, 0.04, 6.0, 6);
+    const cableMat = this.materials.metalDark;
+    const cable = new THREE.Mesh(cableGeo, cableMat);
+    cable.position.set(6.5, 14.0, 0);
+    const hookGeo = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+    const hook = new THREE.Mesh(hookGeo, this.materials.gold);
+    hook.position.set(6.5, 10.8, 0);
+    craneGroup.add(cable, hook);
+
+    group.add(craneGroup);
+
+    // 3. 散落建材堆：工字钢叠放、水泥排水管与警示圆桶
+    const pipeGeo = new THREE.CylinderGeometry(0.45, 0.45, 3.2, 10);
+    pipeGeo.rotateZ(Math.PI / 2);
+    const pipeMat = this.materials.curb;
+    const p1 = new THREE.Mesh(pipeGeo, pipeMat);
+    p1.position.set(-3.5, 0.45, 4.0);
+    const p2 = new THREE.Mesh(pipeGeo, pipeMat);
+    p2.position.set(-3.5, 0.45, 4.9);
+    const p3 = new THREE.Mesh(pipeGeo, pipeMat);
+    p3.position.set(-3.5, 1.15, 4.45);
+    group.add(p1, p2, p3);
+
+    // 警示红白交通路障
+    const barGeo = new THREE.BoxGeometry(1.8, 0.8, 0.3);
+    const barMat = this.getColoredMat(0xe74c3c);
+    const bar1 = new THREE.Mesh(barGeo, barMat);
+    bar1.position.set(1.5, 0.6, 5.5);
+    group.add(bar1);
+
+    group.userData = { radius: 7.2, height: 18.0, level: 9, score: 1250, name: '塔吊市政施工现场' };
+    return group;
+  }
+
+  // 5. 经典黄色校车 (Level 6 街头载具)
+  createSchoolBus() {
+    const group = new THREE.Group();
+    const yellowMat = this.getColoredMat(0xf39c12);
+    const blackMat = this.materials.metalDark;
+
+    // 宽大长车厢
+    const bodyGeo = new THREE.BoxGeometry(2.1, 1.6, 5.8);
+    const body = new THREE.Mesh(bodyGeo, yellowMat);
+    body.position.y = 1.25;
+    group.add(body);
+
+    // 前进气格栅与车头引擎盖
+    const hoodGeo = new THREE.BoxGeometry(1.9, 0.8, 1.1);
+    const hood = new THREE.Mesh(hoodGeo, yellowMat);
+    hood.position.set(0, 0.85, 3.2);
+    group.add(hood);
+
+    // 黑色防擦腰线
+    const rubGeo = new THREE.BoxGeometry(2.14, 0.12, 5.82);
+    const rub = new THREE.Mesh(rubGeo, blackMat);
+    rub.position.y = 0.95;
+    group.add(rub);
+
+    // 车窗阵列
+    const winGeo = new THREE.BoxGeometry(0.08, 0.6, 0.7);
+    const winMat = this.materials.glass;
+    for (let i = -2; i <= 2; i++) {
+      const wL = new THREE.Mesh(winGeo, winMat);
+      wL.position.set(-1.06, 1.45, i * 0.95);
+      const wR = new THREE.Mesh(winGeo, winMat);
+      wR.position.set(1.06, 1.45, i * 0.95);
+      group.add(wL, wR);
+    }
+
+    // 前风挡玻璃
+    const windGeo = new THREE.BoxGeometry(1.8, 0.65, 0.1);
+    windGeo.rotateX(-0.25);
+    const wind = new THREE.Mesh(windGeo, winMat);
+    wind.position.set(0, 1.5, 2.75);
+    group.add(wind);
+
+    // 6 个车轮
+    const wheelGeo = new THREE.CylinderGeometry(0.38, 0.38, 0.32, 12);
+    wheelGeo.rotateZ(Math.PI / 2);
+    const wheelMat = this.materials.tire;
+    const wheelPositions = [
+      [-1.05, 0.38, 2.2], [1.05, 0.38, 2.2],
+      [-1.05, 0.38, -1.2], [1.05, 0.38, -1.2],
+      [-1.05, 0.38, -2.1], [1.05, 0.38, -2.1]
+    ];
+    wheelPositions.forEach(([wx, wy, wz]) => {
+      const w = new THREE.Mesh(wheelGeo, wheelMat);
+      w.position.set(wx, wy, wz);
+      group.add(w);
+    });
+
+    // 车顶闪烁校车警示红灯
+    const redLightGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.16, 8);
+    const redMat = new THREE.MeshBasicMaterial({ color: 0xff0033 });
+    const l1 = new THREE.Mesh(redLightGeo, redMat);
+    l1.position.set(-0.7, 2.15, 2.7);
+    const l2 = new THREE.Mesh(redLightGeo, redMat);
+    l2.position.set(0.7, 2.15, 2.7);
+    group.add(l1, l2);
+
+    group.userData = { radius: 2.8, height: 2.3, level: 6, score: 360, name: '经典黄色校车' };
+    return group;
+  }
+
+  // 6. 赛博超跑 (Level 5 酷炫流线型跑车)
+  createSportsCar() {
+    const group = new THREE.Group();
+    const bodyMat = this.getColoredMat(0x00f0ff); // 电光青
+
+    // 低趴流线车体
+    const baseGeo = new THREE.BoxGeometry(1.85, 0.42, 4.0);
+    const base = new THREE.Mesh(baseGeo, bodyMat);
+    base.position.y = 0.35;
+    group.add(base);
+
+    // 水滴型座舱罩
+    const cabinGeo = new THREE.BoxGeometry(1.35, 0.42, 2.0);
+    const cabinMat = this.materials.glass;
+    const cabin = new THREE.Mesh(cabinGeo, cabinMat);
+    cabin.position.set(0, 0.72, -0.2);
+    group.add(cabin);
+
+    // 碳纤维后扰流巨型尾翼
+    const wingGeo = new THREE.BoxGeometry(1.9, 0.08, 0.45);
+    const wingMat = this.materials.metalDark;
+    const wing = new THREE.Mesh(wingGeo, wingMat);
+    wing.position.set(0, 0.95, -1.8);
+    const st1 = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.3, 0.15), wingMat);
+    st1.position.set(-0.6, 0.75, -1.8);
+    const st2 = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.3, 0.15), wingMat);
+    st2.position.set(0.6, 0.75, -1.8);
+    group.add(wing, st1, st2);
+
+    // 4 只大尺寸低扁平比跑车轮毂
+    const wheelGeo = new THREE.CylinderGeometry(0.34, 0.34, 0.28, 12);
+    wheelGeo.rotateZ(Math.PI / 2);
+    const wheelMat = this.materials.tire;
+    const wSpots = [
+      [-0.95, 0.34, 1.3], [0.95, 0.34, 1.3],
+      [-0.95, 0.34, -1.3], [0.95, 0.34, -1.3]
+    ];
+    wSpots.forEach(([wx, wy, wz]) => {
+      const w = new THREE.Mesh(wheelGeo, wheelMat);
+      w.position.set(wx, wy, wz);
+      group.add(w);
+    });
+
+    group.userData = { radius: 1.5, height: 1.15, level: 5, score: 210, name: '电光赛博超跑' };
+    return group;
+  }
+
+  // 7. 露天街头咖啡遮阳座 (Level 3 街景休闲小品)
+  createOutdoorCafe() {
+    const group = new THREE.Group();
+    // 遮阳伞立柱
+    const poleGeo = new THREE.CylinderGeometry(0.04, 0.04, 2.4, 8);
+    const pole = new THREE.Mesh(poleGeo, this.materials.metalSilver);
+    pole.position.y = 1.2;
+    group.add(pole);
+
+    // 条纹八角遮阳伞顶
+    const umbrellaGeo = new THREE.ConeGeometry(1.3, 0.55, 8);
+    const umbrellaMat = this.getColoredMat(0xe74c3c);
+    const umbrella = new THREE.Mesh(umbrellaGeo, umbrellaMat);
+    umbrella.position.y = 2.15;
+    group.add(umbrella);
+
+    // 圆形小圆桌
+    const tableGeo = new THREE.CylinderGeometry(0.65, 0.65, 0.06, 12);
+    const tableMat = this.materials.metalSilver;
+    const table = new THREE.Mesh(tableGeo, tableMat);
+    table.position.y = 0.75;
+    group.add(table);
+
+    // 3 把小椅子
+    const seatGeo = new THREE.BoxGeometry(0.35, 0.05, 0.35);
+    const seatMat = this.materials.woodTrunk;
+    for (let i = 0; i < 3; i++) {
+      const ang = (i / 3) * Math.PI * 2;
+      const seat = new THREE.Mesh(seatGeo, seatMat);
+      seat.position.set(Math.cos(ang) * 0.85, 0.45, Math.sin(ang) * 0.85);
+      group.add(seat);
+    }
+
+    group.userData = { radius: 1.35, height: 2.45, level: 3, score: 75, name: '遮阳咖啡座' };
+    return group;
+  }
+
+  // 8. 景观生态八角凉亭 (Level 6 公园地标)
+  createGazebo() {
+    const group = new THREE.Group();
+    // 八角基座石台
+    const baseGeo = new THREE.CylinderGeometry(2.4, 2.5, 0.3, 8);
+    const baseMat = this.materials.curb;
+    const base = new THREE.Mesh(baseGeo, baseMat);
+    base.position.y = 0.15;
+    group.add(base);
+
+    // 6 根立柱
+    const colGeo = new THREE.CylinderGeometry(0.1, 0.1, 2.6, 8);
+    const colMat = this.getColoredMat(0xffffff);
+    for (let i = 0; i < 6; i++) {
+      const ang = (i / 6) * Math.PI * 2;
+      const col = new THREE.Mesh(colGeo, colMat);
+      col.position.set(Math.cos(ang) * 1.9, 1.45, Math.sin(ang) * 1.9);
+      group.add(col);
+    }
+
+    // 飞檐攒尖八角亭顶
+    const roofGeo = new THREE.ConeGeometry(2.6, 1.3, 8);
+    const roofMat = this.getColoredMat(0x16a085);
+    const roof = new THREE.Mesh(roofGeo, roofMat);
+    roof.position.y = 3.35;
+    group.add(roof);
+
+    // 亭顶宝顶金球
+    const finialGeo = new THREE.SphereGeometry(0.2, 8, 8);
+    const finial = new THREE.Mesh(finialGeo, this.materials.gold);
+    finial.position.y = 4.1;
+    group.add(finial);
+
+    group.userData = { radius: 2.6, height: 4.2, level: 6, score: 380, name: '生态八角景观亭' };
+    return group;
+  }
 }
