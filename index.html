@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>吞噬进化Games - 抖音小游戏</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- 3D 渲染画布容器 -->
+  <div id="canvas-container"></div>
+
+  <!-- 浮动飘字与连击动画层 -->
+  <div id="combo-container"></div>
+
+  <!-- 成就解锁悬浮横幅通知 -->
+  <div id="achievement-toast" class="achievement-toast" style="display: none;">
+    <div class="ach-icon" id="toast-icon">🏆</div>
+    <div class="ach-text">
+      <div class="ach-toast-title" id="toast-title">解锁成就！</div>
+      <div class="ach-toast-sub" id="toast-sub">达成特定挑战</div>
+    </div>
+    <div class="ach-toast-reward" id="toast-reward">+100 🪙</div>
+  </div>
+
+  <!-- 抖音手游常驻高亮虚拟摇杆 (手柄触控区) -->
+  <div id="joystick-zone">
+    <div id="joystick-base">
+      <div class="joystick-ring"></div>
+      <div id="joystick-knob">
+        <div class="knob-core"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 游戏主菜单与模式选择界面 (Start Screen) -->
+  <div id="start-screen">
+    <div class="menu-container">
+      <!-- 顶部快捷资产与导航栏 -->
+      <div class="menu-top-bar">
+        <div class="user-coins-pill">🪙 <span id="menu-coins">200</span></div>
+        <div class="menu-nav-btns">
+          <button id="btn-open-skins" class="menu-sub-btn" title="黑洞个性皮肤">🎨 皮肤</button>
+          <button id="btn-open-upgrades" class="menu-sub-btn" title="天赋强化研究所">🧪 研究所</button>
+          <button id="btn-open-achievements" class="menu-sub-btn" title="成就荣耀徽章">🏆 成就</button>
+        </div>
+      </div>
+
+      <div class="menu-brand">
+        <div class="brand-badge">⚡ 抖音休闲竞技小游戏</div>
+        <h1 class="game-logo">吞噬进化Games</h1>
+        <p class="game-tagline">从微尘到巨物 · 吞食整座城市</p>
+      </div>
+
+      <div class="mode-selection">
+        <!-- 模式一：对战模式 -->
+        <div class="mode-card selected" data-mode="battle" id="card-battle">
+          <div class="mode-badge badge-fire">🔥 紧张刺激</div>
+          <div class="mode-icon">⚔️</div>
+          <div class="mode-info">
+            <div class="mode-title">对战模式 (Battle)</div>
+            <div class="mode-desc">限时 3 分钟排位，与 6 名 AI 争夺城市资源，大洞吞小洞！</div>
+          </div>
+          <div class="check-mark">✓</div>
+        </div>
+
+        <!-- 模式二：无尽模式 (无AI) -->
+        <div class="mode-card" data-mode="endless" id="card-endless">
+          <div class="mode-badge badge-zen">🧘 纯净解压</div>
+          <div class="mode-icon">♾️</div>
+          <div class="mode-info">
+            <div class="mode-title">无尽模式 (Endless)</div>
+            <div class="mode-desc">无任何 AI 竞争干扰，不限时间，独自将全城每一座大楼吞净！</div>
+          </div>
+          <div class="check-mark">✓</div>
+        </div>
+      </div>
+
+      <div class="control-hints">
+        <span>🕹️ 手游专属虚拟摇杆控制</span>
+        <span>•</span>
+        <span>支持触屏滑动 / 鼠标按住 / 键盘WASD</span>
+      </div>
+
+      <button id="btn-start-game" class="btn-start-game">
+        <span class="btn-text">开始进化 (START)</span>
+      </button>
+
+      <div class="best-score-display">
+        🏆 历史最高战绩: <span id="menu-best-score">0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 个性皮肤定制弹窗 (Skins Modal) -->
+  <div id="skins-modal" class="overlay-modal" style="display: none;">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3>🎨 黑洞个性皮肤</h3>
+        <button id="btn-close-skins" class="close-x-btn">✕</button>
+      </div>
+      <div id="skins-list" class="skins-grid">
+        <!-- 动态生成皮肤列表 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 天赋强化研究所弹窗 (Upgrades Modal) -->
+  <div id="upgrades-modal" class="overlay-modal" style="display: none;">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3>🧪 黑洞能力研究所</h3>
+        <button id="btn-close-upgrades" class="close-x-btn">✕</button>
+      </div>
+      <div class="modal-subtext">使用吞噬积累的金币永久强化初始作战属性</div>
+      <div id="upgrades-list" class="upgrades-container">
+        <!-- 动态生成升级条目 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 成就徽章弹窗 (Achievements Modal) -->
+  <div id="achievements-modal" class="overlay-modal" style="display: none;">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3>🏆 吞噬荣誉殿堂</h3>
+        <button id="btn-close-achievements" class="close-x-btn">✕</button>
+      </div>
+      <div id="achievements-list" class="achievements-grid">
+        <!-- 动态生成成就徽章 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 游戏主 HUD 界面 -->
+  <div id="hud" style="display: none;">
+    <!-- 顶部核心信息栏 -->
+    <div class="top-bar">
+      <!-- 倒计时与名次 (对战模式) / 用时与模式 (无尽模式) -->
+      <div class="match-info-card">
+        <div id="match-timer" class="timer">03:00</div>
+        <div class="divider"></div>
+        <div id="player-rank-badge" class="rank-badge">
+          <span class="rank-num">#1</span> / 7
+        </div>
+      </div>
+
+      <!-- 中间等级与成长进度 -->
+      <div class="growth-card">
+        <div class="level-info">
+          <span id="level-badge" class="badge-tag">Lv.1</span>
+          <span id="level-name" class="level-name">初生微洞</span>
+        </div>
+        <div class="progress-track">
+          <div id="exp-progress-bar" class="progress-fill"></div>
+        </div>
+      </div>
+
+      <!-- 右侧实时雷达小地图与排行榜看板 -->
+      <div class="hud-right-wrapper">
+        <!-- 雷达小地图 -->
+        <div class="radar-box">
+          <canvas id="radar-canvas" width="84" height="84"></canvas>
+        </div>
+
+        <!-- 排行榜或清空看板 -->
+        <div class="leaderboard-card" id="hud-right-card">
+          <div class="lb-title" id="hud-right-title">实时对决榜</div>
+          <div id="leaderboard-list">
+            <!-- 动态注入排行或收集进度 -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 局内增益道具计时浮标 -->
+    <div id="active-buffs" class="active-buffs-list"></div>
+
+    <!-- 中央事件大横幅通知 (升级/击杀/警告) -->
+    <div id="alert-banner" class="alert-banner">
+      <div class="alert-title">准备就绪</div>
+      <div class="alert-sub">滑动摇杆，吞噬万物！</div>
+    </div>
+
+    <!-- 底部状态与操作按钮 -->
+    <div class="bottom-bar">
+      <div id="hole-diameter" class="diameter-badge">黑洞直径: 1.9m</div>
+      <div class="action-buttons">
+        <button id="btn-pause" class="interactive-btn" title="暂停游戏">⏸</button>
+        <button id="btn-home" class="interactive-btn" title="返回主菜单">🏠</button>
+        <button id="btn-mute" class="interactive-btn" title="音效开关">🔊</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 游戏暂停面板 (Pause Modal) -->
+  <div id="pause-modal" class="overlay-modal" style="display: none;">
+    <div class="modal-box pause-box">
+      <div class="modal-head">
+        <h3>⏸ 游戏已暂停</h3>
+      </div>
+      <div class="pause-settings">
+        <div class="setting-row">
+          <span>🔊 音效声音</span>
+          <button id="btn-toggle-sound" class="toggle-pill active">开启</button>
+        </div>
+        <div class="setting-row">
+          <span>🎵 背景音乐</span>
+          <button id="btn-toggle-music" class="toggle-pill active">开启</button>
+        </div>
+      </div>
+      <div class="pause-actions">
+        <button id="btn-resume-game" class="btn-start-game">继续游戏 (Resume)</button>
+        <button id="btn-restart-game" class="btn-secondary">重新开局 (Restart)</button>
+        <button id="btn-quit-game" class="btn-secondary">返回主页 (Quit)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 比赛结束结算大弹窗 -->
+  <div id="gameover-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="settle-title">🏆 比赛结束</h2>
+        <p id="settle-sub">吞噬进化 · 城市竞技对决结果</p>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-item highlight-rank" id="settle-rank-box">
+          <div class="stat-label">本局最终名次</div>
+          <div id="settle-rank" class="stat-val">#1</div>
+        </div>
+
+        <div class="stat-item">
+          <div class="stat-label">总吞噬得分</div>
+          <div id="settle-score" class="stat-val">0</div>
+        </div>
+
+        <div class="stat-item">
+          <div class="stat-label">最大黑洞直径</div>
+          <div id="settle-max-radius" class="stat-val">0.0m</div>
+        </div>
+
+        <div class="stat-item">
+          <div class="stat-label">吞噬物体数量</div>
+          <div id="settle-swallowed" class="stat-val">0</div>
+        </div>
+
+        <div class="stat-item" id="settle-kills-box">
+          <div class="stat-label">击败对手黑洞</div>
+          <div id="settle-kills" class="stat-val">0</div>
+        </div>
+
+        <div class="stat-item">
+          <div class="stat-label">🪙 本局获得金币</div>
+          <div id="settle-coins" class="stat-val" style="color: #ffd700;">+0</div>
+        </div>
+
+        <div class="stat-item" style="grid-column: span 2;">
+          <div class="stat-label">历史最高纪录</div>
+          <div id="settle-best" class="stat-val">0</div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button id="btn-douyin-share" class="btn-douyin-share">🎬 发布对局录屏至抖音 (领 3 倍金币)</button>
+        <button id="btn-douyin-ad" class="btn-douyin-ad">📺 观看视频广告领 300 🪙</button>
+        <button id="btn-restart" class="btn-restart">再来一局 (Play Again)</button>
+        <button id="btn-back-menu" class="btn-secondary">返回模式选择</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 引入主启动逻辑 -->
+  <script type="module" src="main.js"></script>
+</body>
+</html>

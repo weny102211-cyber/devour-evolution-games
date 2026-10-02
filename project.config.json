@@ -1,0 +1,10 @@
+{
+  "setting": {
+    "urlCheck": false,
+    "es6": true,
+    "postcss": false,
+    "minified": false
+  },
+  "appid": "tt_devour_evolution",
+  "projectname": "devour-evolution-games"
+}
