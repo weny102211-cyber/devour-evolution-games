@@ -46,24 +46,48 @@ export class GameManager {
     this.camera.position.set(0, C.OFFSET_Y, C.OFFSET_Z);
     this.camera.lookAt(0, 0, C.LOOK_OFFSET_Z);
 
-    try {
-      this.renderer = new THREE.WebGLRenderer({
-        antialias: true,
-        stencil: true,
-        powerPreference: 'high-performance'
-      });
-    } catch (e) {
-      console.warn('[GameManager] High-performance WebGL context failed, falling back:', e);
-      this.renderer = new THREE.WebGLRenderer({
-        antialias: false,
-        stencil: true
-      });
+    const renderConfigs = [
+      { antialias: true, stencil: true, powerPreference: 'default' },
+      { antialias: false, stencil: false, powerPreference: 'default' },
+      { antialias: false, stencil: false, precision: 'mediump' },
+      { antialias: false, stencil: false, failIfMajorPerformanceCaveat: false }
+    ];
+
+    let rendererInstance = null;
+    for (const cfg of renderConfigs) {
+      try {
+        rendererInstance = new THREE.WebGLRenderer(cfg);
+        if (rendererInstance && rendererInstance.domElement) break;
+      } catch (err) {
+        console.warn('[GameManager] WebGL config failed, trying fallback:', err && err.message);
+      }
     }
+
+    if (!rendererInstance) {
+      // Last-ditch canvas fallback
+      const cvs = document.createElement('canvas');
+      rendererInstance = new THREE.WebGLRenderer({ canvas: cvs, antialias: false });
+    }
+
+    this.renderer = rendererInstance;
     this.renderer.setSize(width, height);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
-    this.container.appendChild(this.renderer.domElement);
+
+    // 监听 WebGL 上下文丢失与恢复
+    this.renderer.domElement.addEventListener('webglcontextlost', (e) => {
+      e.preventDefault();
+      console.warn('[GameManager] WebGL 上下文丢失，已阻止默认崩溃行为');
+    }, false);
+    this.renderer.domElement.addEventListener('webglcontextrestored', () => {
+      console.log('[GameManager] WebGL 上下文已自动恢复');
+      this.renderer.setSize(window.innerWidth, window.innerHeight);
+    }, false);
+
+    if (this.container) {
+      this.container.appendChild(this.renderer.domElement);
+    }
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.72);
     this.scene.add(ambientLight);
@@ -196,7 +220,11 @@ export class GameManager {
     this.audio.ensureContext();
     this.audio.startBGM();
 
-    DouyinPlatform.gameplayStart();
+    try {
+      DouyinPlatform.gameplayStart();
+    } catch (e) {
+      console.warn('[GameManager] Platform start error caught:', e);
+    }
     requestAnimationFrame((t) => this.loop(t));
   }
 

@@ -7,9 +7,25 @@ class DouyinPlatformClass {
     this.recorder = null;
     this.recordedVideoPath = null;
     this.isRecording = false;
+    this.isCrazyGamesReady = false;
 
     this.initRecorder();
     this.initShareMenu();
+    this.initCrazyGames();
+  }
+
+  async initCrazyGames() {
+    if (typeof window === 'undefined') return;
+    try {
+      if (window.CrazyGames && window.CrazyGames.SDK && typeof window.CrazyGames.SDK.init === 'function') {
+        await window.CrazyGames.SDK.init();
+        this.isCrazyGamesReady = true;
+        console.log('[CrazyGames] SDK ready');
+      }
+    } catch (e) {
+      this.isCrazyGamesReady = false;
+      console.log('[Platform] Not running on CrazyGames or SDK init bypassed');
+    }
   }
 
   // 1. 初始化抖音专属对局录屏管理器 (抖音小游戏核心裂变能力)
@@ -92,33 +108,33 @@ class DouyinPlatformClass {
     }
   }
 
-  // CrazyGames SDK 局内打点
+  // CrazyGames SDK 局内打点 (完全容错保护)
   gameplayStart() {
-    if (typeof window !== 'undefined' && window.CrazyGames && window.CrazyGames.SDK && window.CrazyGames.SDK.game) {
-      try {
+    try {
+      if (this.isCrazyGamesReady && window.CrazyGames && window.CrazyGames.SDK) {
         window.CrazyGames.SDK.game.gameplayStart();
         console.log('[CrazyGames] gameplayStart dispatched');
-      } catch (e) {
-        console.warn('[CrazyGames] gameplayStart error:', e);
       }
+    } catch (e) {
+      console.warn('[CrazyGames] gameplayStart safe ignore');
     }
   }
 
   gameplayStop() {
-    if (typeof window !== 'undefined' && window.CrazyGames && window.CrazyGames.SDK && window.CrazyGames.SDK.game) {
-      try {
+    try {
+      if (this.isCrazyGamesReady && window.CrazyGames && window.CrazyGames.SDK) {
         window.CrazyGames.SDK.game.gameplayStop();
         console.log('[CrazyGames] gameplayStop dispatched');
-      } catch (e) {
-        console.warn('[CrazyGames] gameplayStop error:', e);
       }
+    } catch (e) {
+      console.warn('[CrazyGames] gameplayStop safe ignore');
     }
   }
 
   // 局间/死亡插屏广告 (CrazyGames / 网页端变现)
   showMidgameAd(onComplete) {
-    if (typeof window !== 'undefined' && window.CrazyGames && window.CrazyGames.SDK && window.CrazyGames.SDK.ad) {
-      try {
+    try {
+      if (this.isCrazyGamesReady && window.CrazyGames && window.CrazyGames.SDK) {
         window.CrazyGames.SDK.ad.requestAd('midgame', {
           adStarted: () => console.log('[CrazyGames] Midgame ad started'),
           adFinished: () => {
@@ -131,9 +147,9 @@ class DouyinPlatformClass {
           }
         });
         return;
-      } catch (e) {
-        console.warn('[CrazyGames] requestAd midgame exception:', e);
       }
+    } catch (e) {
+      console.warn('[CrazyGames] requestAd midgame safe ignore');
     }
     if (onComplete) onComplete();
   }
@@ -141,8 +157,8 @@ class DouyinPlatformClass {
   // 2. 激励视频广告播放 (看广告翻倍金币 / 解锁高级皮肤 / CrazyGames / 4399 / 抖音)
   showRewardedVideoAd(adUnitId = 'your_ad_unit_id', onSuccess, onFail) {
     // A. CrazyGames 激励视频变现
-    if (typeof window !== 'undefined' && window.CrazyGames && window.CrazyGames.SDK && window.CrazyGames.SDK.ad) {
-      try {
+    try {
+      if (this.isCrazyGamesReady && window.CrazyGames && window.CrazyGames.SDK) {
         window.CrazyGames.SDK.ad.requestAd('rewarded', {
           adStarted: () => console.log('[CrazyGames] Rewarded ad started'),
           adFinished: () => {
@@ -155,9 +171,9 @@ class DouyinPlatformClass {
           }
         });
         return;
-      } catch (e) {
-        console.warn('[CrazyGames] Rewarded ad call failed:', e);
       }
+    } catch (e) {
+      console.warn('[CrazyGames] Rewarded ad safe ignore');
     }
 
     // B. 4399 H5 广告联盟变现

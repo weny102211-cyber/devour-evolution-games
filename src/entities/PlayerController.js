@@ -70,40 +70,55 @@ export class PlayerController {
       }
     });
 
-    // 2. 移动端触屏监听 (经典手游双模式：直接拖摇杆 或 左半屏任意滑动动态摇杆)
-    this.domElement.addEventListener('touchstart', (e) => {
-      if (e.target.closest('#hud, #gameover-modal, #start-screen, .interactive-btn')) return;
-      const touch = e.touches[0];
-      this.handleDragStart(touch.clientX, touch.clientY);
-    }, { passive: false });
+    // 辅助检查是否点击在菜单/弹窗/按钮上
+    const isInteractive = (target) => {
+      if (!target || typeof target.closest !== 'function') return false;
+      return !!target.closest('#start-screen, #pause-modal, #gameover-modal, #skins-modal, #upgrades-modal, #achievements-modal, #sponsor-modal, .overlay-modal, .interactive-btn, button, input, a');
+    };
 
-    this.domElement.addEventListener('touchmove', (e) => {
+    // 2. 触屏交互 (手机端全屏拖拽 + 虚拟摇杆无缝同步)
+    const onTouchStart = (e) => {
+      if (!this.hole.isAlive) return;
+      if (isInteractive(e.target)) return;
+      const touch = e.touches[0];
+      if (touch) this.handleDragStart(touch.clientX, touch.clientY);
+    };
+
+    const onTouchMove = (e) => {
       if (!this.isDragging) return;
-      e.preventDefault();
+      if (e.cancelable) e.preventDefault();
       const touch = e.touches[0];
-      this.handleDragMove(touch.clientX, touch.clientY);
-    }, { passive: false });
+      if (touch) this.handleDragMove(touch.clientX, touch.clientY);
+    };
 
-    const onTouchEnd = () => this.handleDragEnd();
-    this.domElement.addEventListener('touchend', onTouchEnd);
-    this.domElement.addEventListener('touchcancel', onTouchEnd);
+    const onTouchEnd = () => {
+      if (this.isDragging) this.handleDragEnd();
+    };
 
-    // 3. PC 鼠标拖拽控制 (点击任意处或拖拽摇杆均可直接推杆)
-    this.domElement.addEventListener('mousedown', (e) => {
-      if (e.target.closest('#hud, #gameover-modal, #start-screen, .interactive-btn')) return;
+    window.addEventListener('touchstart', onTouchStart, { passive: false });
+    window.addEventListener('touchmove', onTouchMove, { passive: false });
+    window.addEventListener('touchend', onTouchEnd);
+    window.addEventListener('touchcancel', onTouchEnd);
+
+    // 3. 鼠标交互 (PC 端拖拽或点击推杆)
+    const onMouseDown = (e) => {
+      if (!this.hole.isAlive) return;
+      if (isInteractive(e.target)) return;
       this.handleDragStart(e.clientX, e.clientY);
-    });
+    };
 
-    window.addEventListener('mousemove', (e) => {
+    const onMouseMove = (e) => {
       if (!this.isDragging) return;
       this.handleDragMove(e.clientX, e.clientY);
-    });
+    };
 
-    window.addEventListener('mouseup', () => {
-      if (this.isDragging) {
-        this.handleDragEnd();
-      }
-    });
+    const onMouseUp = () => {
+      if (this.isDragging) this.handleDragEnd();
+    };
+
+    window.addEventListener('mousedown', onMouseDown);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
   }
 
   handleDragStart(clientX, clientY) {
