@@ -40,12 +40,13 @@ export class GameManager {
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(GameConfig.PALETTE.sky);
-    this.scene.fog = new THREE.FogExp2(GameConfig.PALETTE.sky, 0.0075);
+    // 采用广域线性大气雾 (160m ~ 780m)，确保俯瞰大都市时建筑清晰不白屏
+    this.scene.fog = new THREE.Fog(GameConfig.PALETTE.sky, 160, 780);
 
     const C = GameConfig.CAMERA;
     const aspect = width / height;
     const fov = aspect < 1.0 ? Math.min(80, GameConfig.CAMERA.FOV / Math.pow(aspect, 0.65)) : C.FOV;
-    this.camera = new THREE.PerspectiveCamera(fov, aspect, 0.5, 600);
+    this.camera = new THREE.PerspectiveCamera(fov, aspect, 0.5, 900);
     this.camera.position.set(0, C.OFFSET_Y, C.OFFSET_Z);
     this.camera.lookAt(0, 0, C.LOOK_OFFSET_Z);
 
@@ -95,19 +96,23 @@ export class GameManager {
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.72);
     this.scene.add(ambientLight);
 
-    const sunLight = new THREE.DirectionalLight(0xfff6e5, 0.95);
-    sunLight.position.set(50, 80, 40);
-    sunLight.castShadow = true;
-    sunLight.shadow.mapSize.width = 1024;
-    sunLight.shadow.mapSize.height = 1024;
-    sunLight.shadow.camera.near = 10;
-    sunLight.shadow.camera.far = 200;
-    const shadowDist = 65;
-    sunLight.shadow.camera.left = -shadowDist;
-    sunLight.shadow.camera.right = shadowDist;
-    sunLight.shadow.camera.top = shadowDist;
-    sunLight.shadow.camera.bottom = -shadowDist;
-    this.scene.add(sunLight);
+    // 动态跟随太阳光：阴影始终精准锚定在玩家周围，杜绝大地图阴影边缘裁剪
+    this.sunLight = new THREE.DirectionalLight(0xfff6e5, 0.95);
+    this.sunLight.position.set(60, 100, 50);
+    this.sunLight.castShadow = true;
+    this.sunLight.shadow.mapSize.width = 1024;
+    this.sunLight.shadow.mapSize.height = 1024;
+    this.sunLight.shadow.camera.near = 10;
+    this.sunLight.shadow.camera.far = 280;
+    const shadowDist = 85;
+    this.sunLight.shadow.camera.left = -shadowDist;
+    this.sunLight.shadow.camera.right = shadowDist;
+    this.sunLight.shadow.camera.top = shadowDist;
+    this.sunLight.shadow.camera.bottom = -shadowDist;
+    this.sunLightTarget = new THREE.Object3D();
+    this.scene.add(this.sunLightTarget);
+    this.sunLight.target = this.sunLightTarget;
+    this.scene.add(this.sunLight);
   }
 
   initSystems() {
@@ -336,6 +341,13 @@ export class GameManager {
       isEndless ? [] : this.aiCtrl.getAllHoles(),
       this.powerUpMgr.items
     );
+
+    // 8. 阳光与阴影中心平滑跟随玩家 (确保超大地图上阴影始终保持高清与无裁切)
+    if (this.sunLight && this.sunLightTarget && this.player) {
+      this.sunLight.position.set(this.player.x + 60, 100, this.player.z + 50);
+      this.sunLightTarget.position.set(this.player.x, 0, this.player.z);
+      this.sunLightTarget.updateMatrixWorld();
+    }
   }
 
   // 拾取局内道具

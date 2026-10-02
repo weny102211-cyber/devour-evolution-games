@@ -280,7 +280,9 @@ export class PlayerController {
 
   updateCameraFollow(delta) {
     const C = GameConfig.CAMERA;
-    const zoomFactor = 1.0 + (this.hole.radius - 1.0) * 0.45;
+    // 采用平滑指数阻尼缩放，确保小体型视野细腻、巨型体型俯瞰整座大都市壮丽全景
+    const extraRad = Math.max(0, this.hole.radius - 1.0);
+    const zoomFactor = 1.0 + Math.pow(extraRad, 0.72) * 0.42;
 
     const targetCamX = this.hole.x;
     const targetCamY = C.OFFSET_Y * zoomFactor;

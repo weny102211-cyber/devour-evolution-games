@@ -9,44 +9,45 @@ export const GameConfig = {
   // 比赛时长 (秒，仅对战模式)
   MATCH_DURATION: 180, // 3分钟一局
 
-  // 地图边界尺寸 (米)
-  MAP_SIZE: 160,
-  MAP_HALF: 80,
+  // 地图边界尺寸 (米) - 翻倍超大地图 (320m x 320m)，容纳 6 大主题城市街区
+  MAP_SIZE: 320,
+  MAP_HALF: 160,
 
   // 相机设置
   CAMERA: {
     FOV: 48,
-    OFFSET_Y: 22,
-    OFFSET_Z: 18,
-    LOOK_OFFSET_Z: -2,
+    OFFSET_Y: 26,
+    OFFSET_Z: 22,
+    LOOK_OFFSET_Z: -3,
     FOLLOW_LERP: 0.14,
   },
 
   // 基础移动速度
-  BASE_SPEED: 12.5,
+  BASE_SPEED: 13.8,
   // 随着体型变大微调速度（略微减缓增加压迫感，但保持爽快）
-  SPEED_DECAY_PER_LEVEL: 0.22,
-  MIN_SPEED: 9.0,
+  SPEED_DECAY_PER_LEVEL: 0.16,
+  MIN_SPEED: 9.8,
 
   // 黑洞吸力作用范围倍率 (强化强力磁吸引力感)
-  SUCTION_RADIUS_FACTOR: 1.85,
+  SUCTION_RADIUS_FACTOR: 1.88,
   // 吞噬吸入速度
-  SUCTION_SPEED: 22.0,
+  SUCTION_SPEED: 24.0,
 
   // 连击时间窗口 (秒)
-  COMBO_TIMEOUT: 1.8,
+  COMBO_TIMEOUT: 2.0,
 
-  // 等级配置表
+  // 等级配置表 (10 阶极致阶梯成长体系)
   LEVELS: [
     { level: 1,  minExp: 0,     radius: 0.95, name: '初生微洞', maxSwallowRadius: 0.45 },
-    { level: 2,  minExp: 100,   radius: 1.45, name: '街道游荡者', maxSwallowRadius: 0.75 },
-    { level: 3,  minExp: 320,   radius: 2.10, name: '街区吞噬者', maxSwallowRadius: 1.15 },
-    { level: 4,  minExp: 750,   radius: 2.90, name: '暴食漩涡', maxSwallowRadius: 1.60 },
-    { level: 5,  minExp: 1500,  radius: 3.90, name: '载具收割者', maxSwallowRadius: 2.25 },
-    { level: 6,  minExp: 2800,  radius: 5.20, name: '重装粉碎机', maxSwallowRadius: 3.10 },
-    { level: 7,  minExp: 4800,  radius: 6.80, name: '巨物捕食者', maxSwallowRadius: 4.40 },
-    { level: 8,  minExp: 8000,  radius: 9.00, name: '城镇瓦解者', maxSwallowRadius: 6.20 },
-    { level: 9,  minExp: 13000, radius: 12.0, name: '万物寂灭', maxSwallowRadius: 9.50 },
+    { level: 2,  minExp: 90,    radius: 1.45, name: '街道游荡者', maxSwallowRadius: 0.75 },
+    { level: 3,  minExp: 280,   radius: 2.15, name: '街区吞噬者', maxSwallowRadius: 1.15 },
+    { level: 4,  minExp: 680,   radius: 3.00, name: '暴食漩涡', maxSwallowRadius: 1.65 },
+    { level: 5,  minExp: 1400,  radius: 4.10, name: '载具收割者', maxSwallowRadius: 2.35 },
+    { level: 6,  minExp: 2600,  radius: 5.50, name: '重装粉碎机', maxSwallowRadius: 3.25 },
+    { level: 7,  minExp: 4500,  radius: 7.20, name: '巨物捕食者', maxSwallowRadius: 4.60 },
+    { level: 8,  minExp: 7500,  radius: 9.80, name: '城镇瓦解者', maxSwallowRadius: 6.80 },
+    { level: 9,  minExp: 12000, radius: 13.5, name: '摩天灾变', maxSwallowRadius: 10.5 },
+    { level: 10, minExp: 18500, radius: 18.0, name: '星云吞噬者', maxSwallowRadius: 16.0 },
   ],
 
   // AI 性格配置

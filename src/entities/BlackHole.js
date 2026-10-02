@@ -239,8 +239,15 @@ export class BlackHole {
     this.root.position.set(this.x, 0, this.z);
     const s = this.radius * (this.punchScale || 1.0);
     this.stencilMesh.scale.set(s, 1, s);
-    this.funnelMesh.scale.set(s, Math.max(1.0, s * 0.75), s);
+
+    // 严密贴合地面的深渊漏斗 (保证漏斗顶部永远与地面平齐，杜绝深渊圆柱伸入空中 Bug)
+    const sy = Math.max(1.0, s * 0.75);
+    this.funnelMesh.scale.set(s, sy, s);
+    this.funnelMesh.position.y = -2.75 * sy;
+
     this.bottomMesh.scale.set(s, 1, s);
+    this.bottomMesh.position.y = -5.5 * sy + 0.05;
+
     this.rimMesh.scale.set(s, 1, s);
     this.outerGlowMesh.scale.set(s, 1, s);
 

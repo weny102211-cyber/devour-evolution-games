@@ -856,4 +856,131 @@ export class ModelFactory {
     group.userData = { radius: 0.32, height: 1.1, level: 1, score: 25, name: '散步市民', isPedestrian: true };
     return group;
   }
+
+  // 现代多层公寓楼 (Level 8 物体，居住区高阶吞噬目标)
+  createApartmentBlock() {
+    const group = new THREE.Group();
+    const w = 7.5, h = 13.0, d = 6.2;
+
+    const baseGeo = new THREE.BoxGeometry(w, h, d);
+    const wallColor = [0xecf0f1, 0xdfe6e9, 0xf7f1e3][Math.floor(Math.random() * 3)];
+    const baseMat = this.getColoredMat(wallColor);
+    const base = new THREE.Mesh(baseGeo, baseMat);
+    base.position.y = h / 2;
+    group.add(base);
+
+    // 楼顶阳台与机房
+    const roofGeo = new THREE.BoxGeometry(w * 0.5, 1.6, d * 0.5);
+    const roof = new THREE.Mesh(roofGeo, this.materials.metalDark);
+    roof.position.y = h + 0.8;
+    group.add(roof);
+
+    // 规整的网格反光窗户
+    const winGeo = new THREE.PlaneGeometry(0.85, 0.95);
+    const winMat = this.materials.glass;
+    for (let floor = 1; floor <= 4; floor++) {
+      const wy = floor * 2.5;
+      for (let col = -2; col <= 2; col++) {
+        if (col === 0) continue;
+        const wx = col * 1.35;
+        // 正面窗户
+        const winF = new THREE.Mesh(winGeo, winMat);
+        winF.position.set(wx, wy, d / 2 + 0.02);
+        // 背面窗户
+        const winB = new THREE.Mesh(winGeo, winMat);
+        winB.position.set(wx, wy, -d / 2 - 0.02);
+        winB.rotation.y = Math.PI;
+        group.add(winF, winB);
+      }
+    }
+
+    group.userData = { radius: 4.8, height: h, level: 8, score: 750, name: '现代公寓楼' };
+    return group;
+  }
+
+  // 霸主级双子星摩天大楼 (Level 10 终极巨型吞噬建筑)
+  createMegaSkyscraper() {
+    const group = new THREE.Group();
+    const w = 11.5, h = 32.0, d = 10.5;
+
+    // 底座巨型主楼
+    const towerGeo = new THREE.BoxGeometry(w, h, d);
+    const towerMat = this.getColoredMat(0x1e272e);
+    const tower = new THREE.Mesh(towerGeo, towerMat);
+    tower.position.y = h / 2;
+    group.add(tower);
+
+    // 顶部收阶二阶塔楼
+    const topGeo = new THREE.BoxGeometry(w * 0.65, 8.0, d * 0.65);
+    const topMat = this.getColoredMat(0x2f3640);
+    const top = new THREE.Mesh(topGeo, topMat);
+    top.position.y = h + 4.0;
+    group.add(top);
+
+    // 避雷针天线
+    const needleGeo = new THREE.CylinderGeometry(0.12, 0.35, 6.5, 8);
+    const needle = new THREE.Mesh(needleGeo, this.materials.gold);
+    needle.position.y = h + 8.0 + 3.25;
+    group.add(needle);
+
+    // 楼体纵向发光条纹
+    const stripeGeo = new THREE.BoxGeometry(0.4, h - 2, 0.4);
+    const stripeMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff });
+    const s1 = new THREE.Mesh(stripeGeo, stripeMat);
+    s1.position.set(w / 2 + 0.05, h / 2, 0);
+    const s2 = new THREE.Mesh(stripeGeo, stripeMat);
+    s2.position.set(-w / 2 - 0.05, h / 2, 0);
+    group.add(s1, s2);
+
+    group.userData = { radius: 7.8, height: h + 14.0, level: 10, score: 1800, name: '双子星超维大厦' };
+    return group;
+  }
+
+  // 警用巡逻车 (Level 5 趣味街头载具)
+  createPoliceCar() {
+    const group = this.createCar('sedan');
+    // 车顶警灯
+    const lightBarGeo = new THREE.BoxGeometry(0.5, 0.12, 0.16);
+    const lightBarMat = this.materials.metalDark;
+    const bar = new THREE.Mesh(lightBarGeo, lightBarMat);
+    bar.position.set(0, 1.25, 0.1);
+
+    const redGeo = new THREE.BoxGeometry(0.18, 0.1, 0.12);
+    const redLight = new THREE.Mesh(redGeo, new THREE.MeshBasicMaterial({ color: 0xff0033 }));
+    redLight.position.set(-0.16, 1.32, 0.1);
+
+    const blueLight = new THREE.Mesh(redGeo, new THREE.MeshBasicMaterial({ color: 0x0066ff }));
+    blueLight.position.set(0.16, 1.32, 0.1);
+
+    group.add(bar, redLight, blueLight);
+    group.userData = { radius: 1.45, height: 1.35, level: 5, score: 180, name: '执勤警车' };
+    return group;
+  }
+
+  // 巨型街头路口广告牌 (Level 6 物体)
+  createBillboard() {
+    const group = new THREE.Group();
+    // 支撑立柱
+    const poleGeo = new THREE.CylinderGeometry(0.28, 0.32, 6.0, 12);
+    const pole = new THREE.Mesh(poleGeo, this.materials.metalDark);
+    pole.position.y = 3.0;
+    group.add(pole);
+
+    // 广告主屏
+    const boardGeo = new THREE.BoxGeometry(5.2, 2.6, 0.4);
+    const boardMat = this.getColoredMat(0x0a192f);
+    const board = new THREE.Mesh(boardGeo, boardMat);
+    board.position.y = 6.2;
+    group.add(board);
+
+    // 霓虹边框
+    const frameGeo = new THREE.BoxGeometry(5.4, 2.8, 0.2);
+    const frameMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc });
+    const frame = new THREE.Mesh(frameGeo, frameMat);
+    frame.position.set(0, 6.2, -0.15);
+    group.add(frame);
+
+    group.userData = { radius: 2.2, height: 7.5, level: 6, score: 320, name: '霓虹巨幅广告牌' };
+    return group;
+  }
 }

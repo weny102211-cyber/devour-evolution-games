@@ -8,7 +8,7 @@ export class ConsumableManager {
     this.objects = []; // 所有物体数组
     this.activeObjects = []; // 未被吞噬的活跃物体
     this.suckingObjects = []; // 正在被吸入/下沉动画过程中的物体
-    this.cellSize = 8.0; // 空间网格单元大小
+    this.cellSize = 12.0; // 空间网格单元大小 (320m 地图优化)
     this.grid = new Map(); // key: "cx,cz" -> Set<object>
   }
 
@@ -119,8 +119,17 @@ export class ConsumableManager {
           // 朝黑洞中心自然倾斜翻滚
           obj.rotation.x += (dz / dist) * delta * 4.0;
           obj.rotation.z -= (dx / dist) * delta * 4.0;
-        } else if (dist < hole.radius + objRadius * 0.65 && !canSwallow) {
-          // 尺寸不足！产生微弱弹性回弹反馈
+        } else if (dist < hole.radius + objRadius * 0.72 && !canSwallow) {
+          // 尺寸不足大建筑/大型载具物理阻挡：将黑洞向外反弹推移，杜绝虚空穿透
+          if (obj.userData.level >= 4) {
+            const overlap = (hole.radius + objRadius * 0.72) - dist;
+            if (dist > 0.05) {
+              const pushX = (dx / dist) * overlap * 0.85;
+              const pushZ = (dz / dist) * overlap * 0.85;
+              hole.setPosition(hole.x + pushX, hole.z + pushZ);
+            }
+          }
+          // 触发微弱弹性回弹与阻挡震屏
           if (obj.userData.wobbleTimer <= 0) {
             obj.userData.wobbleTimer = 0.28;
             obj.userData.wobbleDir.set(-dx / dist, 0, -dz / dist);

@@ -536,14 +536,17 @@ export class UIManager {
     ctx.fillStyle = 'rgba(12, 16, 26, 0.85)';
     ctx.fillRect(0, 0, w, h);
 
-    // 绘制十字主干道
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-    ctx.lineWidth = 2;
+    // 绘制十字主干道与环路路网
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.moveTo(w / 2, 0);
     ctx.lineTo(w / 2, h);
     ctx.moveTo(0, h / 2);
     ctx.lineTo(w, h / 2);
+
+    const ringOff = (85 / (mapHalf * 2)) * w;
+    ctx.strokeRect(w / 2 - ringOff, h / 2 - ringOff, ringOff * 2, ringOff * 2);
     ctx.stroke();
 
     const toRadar = (x, z) => {
@@ -565,8 +568,9 @@ export class UIManager {
       const pt = toRadar(ai.x, ai.z);
       const isBigger = ai.radius > player.radius;
       ctx.fillStyle = isBigger ? '#ff3b30' : '#af52de';
+      const aiRad = Math.max(2.0, (ai.radius / (mapHalf * 2)) * w * 2.0);
       ctx.beginPath();
-      ctx.arc(pt.x, pt.y, Math.max(2, ai.radius * 0.45), 0, Math.PI * 2);
+      ctx.arc(pt.x, pt.y, aiRad, 0, Math.PI * 2);
       ctx.fill();
     }
 
@@ -574,15 +578,16 @@ export class UIManager {
     if (player && player.isAlive) {
       const p = toRadar(player.x, player.z);
       ctx.fillStyle = '#00ffcc';
+      const pRad = Math.max(2.5, (player.radius / (mapHalf * 2)) * w * 2.0);
       ctx.beginPath();
-      ctx.arc(p.x, p.y, Math.max(2.5, player.radius * 0.5), 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, pRad, 0, Math.PI * 2);
       ctx.fill();
 
       // 外围脉冲光圈
       ctx.strokeStyle = 'rgba(0, 255, 204, 0.6)';
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, Math.max(4.5, player.radius * 0.75), 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, pRad + 2.0, 0, Math.PI * 2);
       ctx.stroke();
     }
   }

@@ -17,12 +17,12 @@ export class AIController {
   initAIHoles() {
     // 依据配置初始化 6 位不同性格的 AI
     const spawnPositions = [
-      [-45, -45], // 西北公园
-      [45, -45],  // 东北住宅
-      [-45, 45],  // 西南商街
-      [45, 45],   // 东南车场
-      [-15, 20],  // 主干道旁
-      [20, -15],  // 环路旁
+      [-85, -85], // 西北 CBD 摩天楼区
+      [85, -85],  // 东北商业街区
+      [-85, 85],  // 西南森林公园区
+      [85, 85],   // 东南别墅社区
+      [-35, 45],  // 环路大道旁
+      [45, -35],  // 次级交通干道旁
     ];
 
     GameConfig.AI_PROFILES.forEach((profile, idx) => {
@@ -57,9 +57,10 @@ export class AIController {
       // 1. 处理复活倒计时
       if (!hole.isAlive) {
         if (hole.respawnTimer <= 0) {
-          // 在远离玩家和巨型黑洞的相对安全区域复活
-          const rx = (Math.random() - 0.5) * 110;
-          const rz = (Math.random() - 0.5) * 110;
+          // 在远离玩家和巨型黑洞的相对安全区域复活 (大地图自适应)
+          const range = GameConfig.MAP_HALF * 1.5;
+          const rx = (Math.random() - 0.5) * range;
+          const rz = (Math.random() - 0.5) * range;
           hole.respawn(rx, rz);
         }
         continue;
@@ -224,7 +225,7 @@ export class AIController {
 
   resetAll() {
     const spawnPositions = [
-      [-45, -45], [45, -45], [-45, 45], [45, 45], [-15, 20], [20, -15],
+      [-85, -85], [85, -85], [-85, 85], [85, 85], [-35, 45], [45, -35],
     ];
     this.aiList.forEach((item, idx) => {
       const pos = spawnPositions[idx] || [0, 0];

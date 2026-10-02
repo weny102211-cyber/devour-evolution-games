@@ -2,7 +2,7 @@ import * as THREE from '../../libs/three.module.js';
 import { GameConfig } from '../config.js';
 import { ModelFactory } from '../models/ModelFactory.js';
 
-// 精品现代卡通城市地图构建器
+// 宏伟 3D 大都市构建器 (320m x 320m 超大地图，包含 6 大主题街区与 600+ 可破坏交互物体)
 export class CityBuilder {
   constructor(scene, consumableManager) {
     this.scene = scene;
@@ -15,15 +15,27 @@ export class CityBuilder {
   buildCity() {
     this.createGroundAndRoads();
     this.createPerimeterWalls();
+
+    // 1. 中央政务与景观环岛广场 (0, 0)
     this.populateCentralPlaza();
-    this.populateEcoPark();
-    this.populateResidentialDistrict();
+
+    // 2. 西北 CBD 摩天大楼与商务金融中心 (-85, -85)
+    this.populateFinancialDistrict();
+
+    // 3. 东北霓虹商业街与小吃夜市 (85, -85)
     this.populateCommercialMarket();
-    this.populateDowntownAndParking();
-    this.populateRoadTrafficAndProps();
+
+    // 4. 西南生态中央森林公园与步道 (-85, 85)
+    this.populateEcoForestPark();
+
+    // 5. 东南阳光独栋别墅居住社区 (85, 85)
+    this.populateSuburbanCommunity();
+
+    // 6. 全城交通环路网络、公交枢纽与干道巡游载具
+    this.populateMetropolitanTransit();
   }
 
-  // 1. 地面与道路网络
+  // 1. 广袤城市地面与纵横多车道公路网
   createGroundAndRoads() {
     // 整体绿色草坪基底 (启用 Stencil 镂空，黑洞下方真实穿透挖洞)
     const groundGeo = new THREE.PlaneGeometry(this.mapSize, this.mapSize);
@@ -35,38 +47,55 @@ export class CityBuilder {
     ground.renderOrder = 2;
     this.scene.add(ground);
 
-    // 主干道路宽 12 米，十字交叉贯穿城市
     const roadMat = this.factory.materials.asphalt;
-    const roadCrossH = new THREE.Mesh(new THREE.PlaneGeometry(this.mapSize, 12).rotateX(-Math.PI / 2), roadMat);
+
+    // 十字主干道大道 (宽 18 米，贯穿 320 米全城)
+    const roadCrossH = new THREE.Mesh(new THREE.PlaneGeometry(this.mapSize, 18).rotateX(-Math.PI / 2), roadMat);
     roadCrossH.position.y = 0.01;
     roadCrossH.receiveShadow = true;
     roadCrossH.renderOrder = 2;
 
-    const roadCrossV = new THREE.Mesh(new THREE.PlaneGeometry(12, this.mapSize).rotateX(-Math.PI / 2), roadMat);
+    const roadCrossV = new THREE.Mesh(new THREE.PlaneGeometry(18, this.mapSize).rotateX(-Math.PI / 2), roadMat);
     roadCrossV.position.y = 0.01;
     roadCrossV.receiveShadow = true;
     roadCrossV.renderOrder = 2;
 
-    // 次级环路 (距离中心 42 米处的环形道路)
-    const ringRoadN = new THREE.Mesh(new THREE.PlaneGeometry(this.mapSize - 20, 8).rotateX(-Math.PI / 2), roadMat);
-    ringRoadN.position.set(0, 0.01, -42);
-    ringRoadN.renderOrder = 2;
-    const ringRoadS = new THREE.Mesh(new THREE.PlaneGeometry(this.mapSize - 20, 8).rotateX(-Math.PI / 2), roadMat);
-    ringRoadS.position.set(0, 0.01, 42);
-    ringRoadS.renderOrder = 2;
-    const ringRoadW = new THREE.Mesh(new THREE.PlaneGeometry(8, this.mapSize - 20).rotateX(-Math.PI / 2), roadMat);
-    ringRoadW.position.set(-42, 0.01, 0);
-    ringRoadW.renderOrder = 2;
-    const ringRoadE = new THREE.Mesh(new THREE.PlaneGeometry(8, this.mapSize - 20).rotateX(-Math.PI / 2), roadMat);
-    ringRoadE.position.set(42, 0.01, 0);
-    ringRoadE.renderOrder = 2;
+    this.scene.add(roadCrossH, roadCrossV);
 
-    this.scene.add(roadCrossH, roadCrossV, ringRoadN, ringRoadS, ringRoadW, ringRoadE);
+    // 次级外环大道 (位于 x = ±85, z = ±85，宽 12 米)
+    const ringN = new THREE.Mesh(new THREE.PlaneGeometry(this.mapSize - 30, 12).rotateX(-Math.PI / 2), roadMat);
+    ringN.position.set(0, 0.01, -85);
+    ringN.renderOrder = 2;
+    const ringS = new THREE.Mesh(new THREE.PlaneGeometry(this.mapSize - 30, 12).rotateX(-Math.PI / 2), roadMat);
+    ringS.position.set(0, 0.01, 85);
+    ringS.renderOrder = 2;
+    const ringW = new THREE.Mesh(new THREE.PlaneGeometry(12, this.mapSize - 30).rotateX(-Math.PI / 2), roadMat);
+    ringW.position.set(-85, 0.01, 0);
+    ringW.renderOrder = 2;
+    const ringE = new THREE.Mesh(new THREE.PlaneGeometry(12, this.mapSize - 30).rotateX(-Math.PI / 2), roadMat);
+    ringE.position.set(85, 0.01, 0);
+    ringE.renderOrder = 2;
 
-    // 绘制道路标线 (黄色双黄线与斑马线)
+    // 街区内联络支路 (位于 x = ±42, z = ±42，宽 9 米)
+    const subN = new THREE.Mesh(new THREE.PlaneGeometry(this.mapSize - 60, 9).rotateX(-Math.PI / 2), roadMat);
+    subN.position.set(0, 0.01, -42);
+    subN.renderOrder = 2;
+    const subS = new THREE.Mesh(new THREE.PlaneGeometry(this.mapSize - 60, 9).rotateX(-Math.PI / 2), roadMat);
+    subS.position.set(0, 0.01, 42);
+    subS.renderOrder = 2;
+    const subW = new THREE.Mesh(new THREE.PlaneGeometry(9, this.mapSize - 60).rotateX(-Math.PI / 2), roadMat);
+    subW.position.set(-42, 0.01, 0);
+    subW.renderOrder = 2;
+    const subE = new THREE.Mesh(new THREE.PlaneGeometry(9, this.mapSize - 60).rotateX(-Math.PI / 2), roadMat);
+    subE.position.set(42, 0.01, 0);
+    subE.renderOrder = 2;
+
+    this.scene.add(ringN, ringS, ringW, ringE, subN, subS, subW, subE);
+
+    // 绘制主干道双黄线与环路斑马线
     this.createRoadMarkings();
 
-    // 人行道铺设
+    // 沿所有道路两侧铺设精致人行道
     this.createSidewalks();
   }
 
@@ -74,21 +103,21 @@ export class CityBuilder {
     const yellowMat = this.factory.materials.markingYellow;
     const whiteMat = this.factory.materials.markingWhite;
 
-    // 十字主干道的双黄实线
-    const lineH = new THREE.Mesh(new THREE.PlaneGeometry(this.mapSize - 20, 0.35).rotateX(-Math.PI / 2), yellowMat);
+    // 十字主干道双黄实线
+    const lineH = new THREE.Mesh(new THREE.PlaneGeometry(this.mapSize - 30, 0.4).rotateX(-Math.PI / 2), yellowMat);
     lineH.position.set(0, 0.02, 0);
     lineH.renderOrder = 2;
-    const lineV = new THREE.Mesh(new THREE.PlaneGeometry(0.35, this.mapSize - 20).rotateX(-Math.PI / 2), yellowMat);
+    const lineV = new THREE.Mesh(new THREE.PlaneGeometry(0.4, this.mapSize - 30).rotateX(-Math.PI / 2), yellowMat);
     lineV.position.set(0, 0.02, 0);
     lineV.renderOrder = 2;
     this.scene.add(lineH, lineV);
 
     // 十字路口斑马线
     const addCrosswalk = (cx, cz, isHorizontal) => {
-      for (let i = -4; i <= 4; i += 1.4) {
+      for (let i = -5.5; i <= 5.5; i += 1.5) {
         const stripeGeo = isHorizontal
-          ? new THREE.PlaneGeometry(3.5, 0.65).rotateX(-Math.PI / 2)
-          : new THREE.PlaneGeometry(0.65, 3.5).rotateX(-Math.PI / 2);
+          ? new THREE.PlaneGeometry(4.2, 0.8).rotateX(-Math.PI / 2)
+          : new THREE.PlaneGeometry(0.8, 4.2).rotateX(-Math.PI / 2);
         const stripe = new THREE.Mesh(stripeGeo, whiteMat);
         stripe.renderOrder = 2;
         if (isHorizontal) {
@@ -100,21 +129,40 @@ export class CityBuilder {
       }
     };
 
-    // 4个主十字路口斑马线
-    addCrosswalk(-14, 0, false);
-    addCrosswalk(14, 0, false);
-    addCrosswalk(0, -14, true);
-    addCrosswalk(0, 14, true);
+    // 中心大十字路口斑马线
+    addCrosswalk(-18, 0, false);
+    addCrosswalk(18, 0, false);
+    addCrosswalk(0, -18, true);
+    addCrosswalk(0, 18, true);
+
+    // 4个二级环路路口斑马线
+    addCrosswalk(-85, -18, true);
+    addCrosswalk(-85, 18, true);
+    addCrosswalk(85, -18, true);
+    addCrosswalk(85, 18, true);
+    addCrosswalk(-18, -85, false);
+    addCrosswalk(18, -85, false);
+    addCrosswalk(-18, 85, false);
+    addCrosswalk(18, 85, false);
   }
 
   createSidewalks() {
     const swMat = this.factory.materials.sidewalk;
-    // 沿道路两侧布置淡灰色人行道条块
+    // 沿主十字干道两侧布置人行道
     const swConfigs = [
-      { w: this.mapSize, d: 2.2, x: 0, z: 7.1 },
-      { w: this.mapSize, d: 2.2, x: 0, z: -7.1 },
-      { w: 2.2, d: this.mapSize, x: 7.1, z: 0 },
-      { w: 2.2, d: this.mapSize, x: -7.1, z: 0 },
+      { w: this.mapSize, d: 2.8, x: 0, z: 10.4 },
+      { w: this.mapSize, d: 2.8, x: 0, z: -10.4 },
+      { w: 2.8, d: this.mapSize, x: 10.4, z: 0 },
+      { w: 2.8, d: this.mapSize, x: -10.4, z: 0 },
+      // 外环道路人行道
+      { w: this.mapSize - 30, d: 2.4, x: 0, z: -92.2 },
+      { w: this.mapSize - 30, d: 2.4, x: 0, z: -77.8 },
+      { w: this.mapSize - 30, d: 2.4, x: 0, z: 77.8 },
+      { w: this.mapSize - 30, d: 2.4, x: 0, z: 92.2 },
+      { w: 2.4, d: this.mapSize - 30, x: -92.2, z: 0 },
+      { w: 2.4, d: this.mapSize - 30, x: -77.8, z: 0 },
+      { w: 2.4, d: this.mapSize - 30, x: 77.8, z: 0 },
+      { w: 2.4, d: this.mapSize - 30, x: 92.2, z: 0 },
     ];
     swConfigs.forEach(cfg => {
       const sw = new THREE.Mesh(new THREE.PlaneGeometry(cfg.w, cfg.d).rotateX(-Math.PI / 2), swMat);
@@ -124,27 +172,25 @@ export class CityBuilder {
     });
   }
 
-  // 城市外围防跌落装饰护栏与围墙
+  // 城市外围防跌落装饰护栏与角楼
   createPerimeterWalls() {
-    const wallGeo = new THREE.BoxGeometry(this.mapSize, 1.4, 1.2);
+    const wallGeoH = new THREE.BoxGeometry(this.mapSize, 1.8, 1.5);
+    const wallGeoV = new THREE.BoxGeometry(1.5, 1.8, this.mapSize);
     const wallMat = this.factory.materials.curb;
 
-    const wNorth = new THREE.Mesh(wallGeo, wallMat);
-    wNorth.position.set(0, 0.7, -this.half);
-    const wSouth = new THREE.Mesh(wallGeo, wallMat);
-    wSouth.position.set(0, 0.7, this.half);
-
-    const wallSideGeo = new THREE.BoxGeometry(1.2, 1.4, this.mapSize);
-    const wWest = new THREE.Mesh(wallSideGeo, wallMat);
-    wWest.position.set(-this.half, 0.7, 0);
-    const wEast = new THREE.Mesh(wallSideGeo, wallMat);
-    wEast.position.set(this.half, 0.7, 0);
+    const wNorth = new THREE.Mesh(wallGeoH, wallMat);
+    wNorth.position.set(0, 0.9, -this.half);
+    const wSouth = new THREE.Mesh(wallGeoH, wallMat);
+    wSouth.position.set(0, 0.9, this.half);
+    const wWest = new THREE.Mesh(wallGeoV, wallMat);
+    wWest.position.set(-this.half, 0.9, 0);
+    const wEast = new THREE.Mesh(wallGeoV, wallMat);
+    wEast.position.set(this.half, 0.9, 0);
 
     this.scene.add(wNorth, wSouth, wWest, wEast);
 
     // 四角观景小塔楼
-    const cornerTowerGeo = new THREE.CylinderGeometry(1.8, 2.2, 3.5, 8);
-    const towerMat = this.factory.materials.curb;
+    const cornerTowerGeo = new THREE.CylinderGeometry(2.5, 3.2, 5.0, 10);
     const corners = [
       [-this.half, -this.half],
       [this.half, -this.half],
@@ -152,13 +198,13 @@ export class CityBuilder {
       [this.half, this.half]
     ];
     corners.forEach(([cx, cz]) => {
-      const tower = new THREE.Mesh(cornerTowerGeo, towerMat);
-      tower.position.set(cx, 1.75, cz);
+      const tower = new THREE.Mesh(cornerTowerGeo, wallMat);
+      tower.position.set(cx, 2.5, cz);
       this.scene.add(tower);
     });
   }
 
-  // 辅助添加可吞噬物体
+  // 注册并放置可吞噬物体
   addProp(mesh, x, z, rotY = 0) {
     mesh.position.x = x;
     mesh.position.z = z;
@@ -169,132 +215,240 @@ export class CityBuilder {
   }
 
   // ====================================================
-  // 核心地块 1：中心城市广场 (Level 7~9 巨物地标与周边微观设施)
+  // 地块 1：中央政务与景观环岛广场 ((0, 0) 周边)
   // ====================================================
   populateCentralPlaza() {
-    // 中央大喷泉 (Level 7)
+    // 广场中央宏伟喷泉 (Level 7)
     const fountain = this.factory.createCentralFountain();
     this.addProp(fountain, 0, 0);
 
-    // 广场环绕花坛与长椅
-    for (let i = 0; i < 6; i++) {
-      const angle = (i / 6) * Math.PI * 2;
-      const r = 6.2;
+    // 环岛周围花坛与长椅
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2;
+      const r = 7.5;
       const px = Math.cos(angle) * r;
       const pz = Math.sin(angle) * r;
 
       if (i % 2 === 0) {
-        const bench = this.factory.createParkBench();
-        this.addProp(bench, px, pz, angle + Math.PI / 2);
+        this.addProp(this.factory.createParkBench(), px, pz, angle + Math.PI / 2);
       } else {
-        const planter = this.factory.createFlowerPlanter();
-        this.addProp(planter, px, pz);
+        this.addProp(this.factory.createFlowerPlanter(), px, pz);
       }
-
-      // 散落一些易拉罐和路障锥
-      if (Math.random() > 0.3) {
-        const can = this.factory.createSodaCan();
-        this.addProp(can, px + (Math.random() - 0.5) * 1.5, pz + (Math.random() - 0.5) * 1.5);
-      }
+      this.addProp(this.factory.createSodaCan(), px + 0.9, pz + 0.9);
     }
 
-    // 广场四角地标性摩天大楼 (Level 9) 与钟楼
-    const office1 = this.factory.createOfficeTower();
-    this.addProp(office1, -22, -22);
+    // 主干道四角红绿灯 (Level 3)
+    this.addProp(this.factory.createTrafficLight(), -10.5, 10.5, 0);
+    this.addProp(this.factory.createTrafficLight(), 10.5, 10.5, -Math.PI / 2);
+    this.addProp(this.factory.createTrafficLight(), -10.5, -10.5, Math.PI / 2);
+    this.addProp(this.factory.createTrafficLight(), 10.5, -10.5, Math.PI);
 
-    const office2 = this.factory.createOfficeTower();
-    this.addProp(office2, 22, -22);
-
-    const clockTower = this.factory.createClockTower();
-    this.addProp(clockTower, -22, 22);
-
-    const store = this.factory.createCornerStore();
-    this.addProp(store, 22, 22);
-
-    // 4座主要十字路口红绿灯杆 (Level 3)
-    this.addProp(this.factory.createTrafficLight(), -7.6, 7.6, 0);
-    this.addProp(this.factory.createTrafficLight(), 7.6, 7.6, -Math.PI / 2);
-    this.addProp(this.factory.createTrafficLight(), -7.6, -7.6, Math.PI / 2);
-    this.addProp(this.factory.createTrafficLight(), 7.6, -7.6, Math.PI);
-
-    // 玩家出生点 (0, 14) 周边人行道极速启动资源群 (开局 3 秒爽快体验)
+    // 玩家出生点 (0, 18) 黄金极速发育糖果路线 (开局 3 秒连击爆爽)
     const starterItems = [
-      { f: () => this.factory.createSodaCan(), x: 7.5, z: 12 },
-      { f: () => this.factory.createSodaCan(), x: 7.5, z: 14 },
-      { f: () => this.factory.createSodaCan(), x: 7.5, z: 16 },
-      { f: () => this.factory.createSodaCan(), x: 7.5, z: 18 },
-      { f: () => this.factory.createCardboardBox(), x: -7.5, z: 11 },
-      { f: () => this.factory.createCardboardBox(), x: -7.5, z: 13 },
-      { f: () => this.factory.createCardboardBox(), x: -7.5, z: 15 },
-      { f: () => this.factory.createCardboardBox(), x: -7.5, z: 17 },
-      { f: () => this.factory.createTrafficCone(), x: 2.2, z: 16 },
-      { f: () => this.factory.createTrafficCone(), x: -2.2, z: 16 },
-      { f: () => this.factory.createTrafficCone(), x: 2.2, z: 12 },
-      { f: () => this.factory.createTrafficCone(), x: -2.2, z: 12 },
-      { f: () => this.factory.createTrashCan(), x: 7.5, z: 20 },
-      { f: () => this.factory.createTrashCan(), x: -7.5, z: 20 },
-      { f: () => this.factory.createParkBench(), x: 7.5, z: 22, rot: Math.PI / 2 },
-      { f: () => this.factory.createParkBench(), x: -7.5, z: 22, rot: -Math.PI / 2 },
-      { f: () => this.factory.createStreetLamp(), x: 7.5, z: 10 },
-      { f: () => this.factory.createStreetLamp(), x: -7.5, z: 10 },
+      { f: () => this.factory.createSodaCan(), x: 11, z: 14 },
+      { f: () => this.factory.createSodaCan(), x: 11, z: 16 },
+      { f: () => this.factory.createSodaCan(), x: 11, z: 18 },
+      { f: () => this.factory.createSodaCan(), x: 11, z: 20 },
+      { f: () => this.factory.createSodaCan(), x: 11, z: 22 },
+      { f: () => this.factory.createCardboardBox(), x: -11, z: 13 },
+      { f: () => this.factory.createCardboardBox(), x: -11, z: 15 },
+      { f: () => this.factory.createCardboardBox(), x: -11, z: 17 },
+      { f: () => this.factory.createCardboardBox(), x: -11, z: 19 },
+      { f: () => this.factory.createCardboardBox(), x: -11, z: 21 },
+      { f: () => this.factory.createTrafficCone(), x: 3.5, z: 20 },
+      { f: () => this.factory.createTrafficCone(), x: -3.5, z: 20 },
+      { f: () => this.factory.createTrafficCone(), x: 3.5, z: 15 },
+      { f: () => this.factory.createTrafficCone(), x: -3.5, z: 15 },
+      { f: () => this.factory.createTrafficCone(), x: 0, z: 23 },
+      { f: () => this.factory.createTrashCan(), x: 11, z: 25 },
+      { f: () => this.factory.createTrashCan(), x: -11, z: 25 },
+      { f: () => this.factory.createFireHydrant(), x: 11, z: 27 },
+      { f: () => this.factory.createFireHydrant(), x: -11, z: 27 },
+      { f: () => this.factory.createParkBench(), x: 11, z: 29, rot: Math.PI / 2 },
+      { f: () => this.factory.createParkBench(), x: -11, z: 29, rot: -Math.PI / 2 },
+      { f: () => this.factory.createStreetLamp(), x: 11, z: 12 },
+      { f: () => this.factory.createStreetLamp(), x: -11, z: 12 },
     ];
     starterItems.forEach(item => {
       this.addProp(item.f(), item.x, item.z, item.rot || 0);
     });
 
-    // 中心广场与周边街道漫步市民 (Level 1 动态趣味目标)
-    const pedCoords = [
-      [7.5, 8], [-7.5, 8], [8, -7.5], [-8, -7.5],
-      [14, 2], [-14, -2], [2, 14], [-2, -14],
-      [4, 4], [-4, 4], [4, -4], [-4, -4],
-      [7.5, 26], [-7.5, 26], [26, 7.5], [-26, 7.5]
+    // 漫步市民小分队 (Level 1 动态目标)
+    const pedSpots = [
+      [11, 10], [-11, 10], [10, -11], [-10, -11],
+      [11, 24], [-11, 24], [5, 5], [-5, 5],
+      [5, -5], [-5, -5], [15, 0], [-15, 0],
+      [0, 26], [0, -26], [11, -18], [-11, -18]
     ];
-    pedCoords.forEach(([px, pz]) => {
-      const ped = this.factory.createPedestrian();
-      this.addProp(ped, px, pz, Math.random() * Math.PI * 2);
+    pedSpots.forEach(([px, pz]) => {
+      this.addProp(this.factory.createPedestrian(), px, pz, Math.random() * Math.PI * 2);
     });
   }
 
   // ====================================================
-  // 核心地块 2：西北生态公园 (Level 1~3 极速起步刷分圣地)
+  // 地块 2：西北 CBD 摩天大楼与商务金融区 ((-85, -85) 周边)
   // ====================================================
-  populateEcoPark() {
-    const minX = -72, maxX = -16;
-    const minZ = -72, maxZ = -16;
+  populateFinancialDistrict() {
+    const baseX = -85;
+    const baseZ = -85;
 
-    // 大量密集的景观小树与中型树 (Level 3~4)
-    for (let x = minX + 6; x <= maxX - 6; x += 9) {
-      for (let z = minZ + 6; z <= maxZ - 6; z += 9) {
-        const jitterX = x + (Math.random() - 0.5) * 3.5;
-        const jitterZ = z + (Math.random() - 0.5) * 3.5;
-        const tree = Math.random() > 0.4 ? this.factory.createSmallTree() : this.factory.createMediumTree();
-        this.addProp(tree, jitterX, jitterZ);
+    // 4 座霸主级超维双子星摩天大楼 (Level 10)
+    this.addProp(this.factory.createMegaSkyscraper(), baseX - 30, baseZ - 30);
+    this.addProp(this.factory.createMegaSkyscraper(), baseX + 30, baseZ - 30);
+    this.addProp(this.factory.createMegaSkyscraper(), baseX - 30, baseZ + 30);
+    this.addProp(this.factory.createMegaSkyscraper(), baseX + 30, baseZ + 30);
+
+    // 8 座现代高层商业写字楼 (Level 9)
+    const officeOffsets = [
+      [-12, -30], [12, -30], [-30, -12], [-30, 12],
+      [30, -12], [30, 12], [-12, 30], [12, 30]
+    ];
+    officeOffsets.forEach(([ox, oz]) => {
+      this.addProp(this.factory.createOfficeTower(), baseX + ox, baseZ + oz);
+    });
+
+    // 4 座古典钟楼 (Level 8)
+    this.addProp(this.factory.createClockTower(), baseX - 15, baseZ - 15);
+    this.addProp(this.factory.createClockTower(), baseX + 15, baseZ - 15);
+    this.addProp(this.factory.createClockTower(), baseX - 15, baseZ + 15);
+    this.addProp(this.factory.createClockTower(), baseX + 15, baseZ + 15);
+
+    // 4 座中高层公寓楼 (Level 8)
+    this.addProp(this.factory.createApartmentBlock(), baseX - 48, baseZ);
+    this.addProp(this.factory.createApartmentBlock(), baseX + 48, baseZ);
+    this.addProp(this.factory.createApartmentBlock(), baseX, baseZ - 48);
+    this.addProp(this.factory.createApartmentBlock(), baseX, baseZ + 48);
+
+    // 商务区露天停车场：停靠多辆商务轿车、出租车与警车 (Level 5)
+    for (let r = 0; r < 3; r++) {
+      for (let c = 0; c < 5; c++) {
+        const carX = baseX - 12 + c * 6.0;
+        const carZ = baseZ - 6 + r * 7.5;
+        const type = (c === 0 && r === 0) ? 'police' : (c === 2 ? 'taxi' : 'sedan');
+        const carMesh = type === 'police' ? this.factory.createPoliceCar() : this.factory.createCar(type);
+        this.addProp(carMesh, carX, carZ, Math.PI / 2);
+
+        // 散落的易拉罐、快递盒
+        if (Math.random() > 0.35) {
+          this.addProp(this.factory.createSodaCan(), carX + 1.5, carZ + 1.2);
+        }
       }
     }
 
-    // 大量公园长椅、路灯、垃圾桶 (Level 2~3)
-    for (let i = 0; i < 18; i++) {
-      const rx = minX + 5 + Math.random() * (maxX - minX - 10);
-      const rz = minZ + 5 + Math.random() * (maxZ - minZ - 10);
-      const bench = this.factory.createParkBench();
-      this.addProp(bench, rx, rz, Math.random() * Math.PI * 2);
+    // 商务街区自动售货机、路灯与垃圾桶
+    for (let i = 0; i < 16; i++) {
+      const rx = baseX + (Math.random() - 0.5) * 85;
+      const rz = baseZ + (Math.random() - 0.5) * 85;
+      this.addProp(this.factory.createStreetLamp(), rx, rz);
+      this.addProp(this.factory.createTrashCan(), rx + 1.5, rz);
+      if (i % 3 === 0) {
+        this.addProp(this.factory.createVendingMachine(), rx - 1.6, rz);
+      }
+    }
+  }
 
-      const lamp = this.factory.createStreetLamp();
-      this.addProp(lamp, rx + 1.8, rz + 1.8);
+  // ====================================================
+  // 地块 3：东北霓虹商业步行街与小吃夜市 ((85, -85) 周边)
+  // ====================================================
+  populateCommercialMarket() {
+    const baseX = 85;
+    const baseZ = -85;
 
-      const bin = this.factory.createTrashCan();
-      this.addProp(bin, rx - 1.5, rz);
+    // 沿街排布 12 家便利店与快餐厅 (Level 7)
+    for (let i = 0; i < 4; i++) {
+      this.addProp(this.factory.createCornerStore(), baseX - 35 + i * 22, baseZ - 36, 0);
+      this.addProp(this.factory.createCornerStore(), baseX - 35 + i * 22, baseZ + 36, Math.PI);
+    }
+    for (let i = 0; i < 2; i++) {
+      this.addProp(this.factory.createCornerStore(), baseX - 48, baseZ - 14 + i * 28, Math.PI / 2);
+      this.addProp(this.factory.createCornerStore(), baseX + 48, baseZ - 14 + i * 28, -Math.PI / 2);
     }
 
-    // 遍地丰富密集的 Level 1 启动资源 (易拉罐、快递纸箱、路障锥)
+    // 4 栋大型商业公寓楼 (Level 8)
+    this.addProp(this.factory.createApartmentBlock(), baseX - 28, baseZ - 14);
+    this.addProp(this.factory.createApartmentBlock(), baseX + 28, baseZ - 14);
+    this.addProp(this.factory.createApartmentBlock(), baseX - 28, baseZ + 14);
+    this.addProp(this.factory.createApartmentBlock(), baseX + 28, baseZ + 14);
+
+    // 美食步行街：热狗餐车、自动售货机、摩托车队 (Level 3~4)
+    for (let i = 0; i < 6; i++) {
+      const hx = baseX - 25 + i * 10;
+      this.addProp(this.factory.createHotDogCart(), hx, baseZ - 2);
+      this.addProp(this.factory.createMotorcycle(), hx + 3.2, baseZ + 2, Math.PI / 4);
+      this.addProp(this.factory.createVendingMachine(), hx - 3.2, baseZ + 2);
+    }
+
+    // 街头巨型霓虹广告牌 (Level 6)
+    this.addProp(this.factory.createBillboard(), baseX - 22, baseZ - 46, 0);
+    this.addProp(this.factory.createBillboard(), baseX + 22, baseZ - 46, 0);
+    this.addProp(this.factory.createBillboard(), baseX - 22, baseZ + 46, Math.PI);
+    this.addProp(this.factory.createBillboard(), baseX + 22, baseZ + 46, Math.PI);
+
+    // 步行街长椅、路灯、消防栓与满地快餐垃圾 (Level 1~3 极高密度)
     for (let i = 0; i < 45; i++) {
-      const rx = minX + 4 + Math.random() * (maxX - minX - 8);
-      const rz = minZ + 4 + Math.random() * (maxZ - minZ - 8);
+      const rx = baseX + (Math.random() - 0.5) * 80;
+      const rz = baseZ + (Math.random() - 0.5) * 80;
       const roll = Math.random();
-      if (roll < 0.4) {
+      if (roll < 0.35) {
         this.addProp(this.factory.createSodaCan(), rx, rz);
-      } else if (roll < 0.7) {
+      } else if (roll < 0.65) {
         this.addProp(this.factory.createCardboardBox(), rx, rz);
+      } else if (roll < 0.85) {
+        this.addProp(this.factory.createParkBench(), rx, rz, Math.random() * Math.PI * 2);
+      } else {
+        this.addProp(this.factory.createTrashCan(), rx, rz);
+      }
+    }
+
+    // 商业街逛街市民
+    for (let i = 0; i < 18; i++) {
+      const rx = baseX + (Math.random() - 0.5) * 65;
+      const rz = baseZ + (Math.random() - 0.5) * 65;
+      this.addProp(this.factory.createPedestrian(), rx, rz, Math.random() * Math.PI * 2);
+    }
+  }
+
+  // ====================================================
+  // 地块 4：西南生态中央森林公园与步道 ((-85, 85) 周边)
+  // ====================================================
+  populateEcoForestPark() {
+    const baseX = -85;
+    const baseZ = 85;
+
+    // 密集景观森林 (超过 70 棵小树、中型树与高耸松树，Level 3~5 快速升级宝地)
+    for (let x = baseX - 45; x <= baseX + 45; x += 11) {
+      for (let z = baseZ - 45; z <= baseZ + 45; z += 11) {
+        const jx = x + (Math.random() - 0.5) * 5.0;
+        const jz = z + (Math.random() - 0.5) * 5.0;
+        const roll = Math.random();
+        if (roll < 0.45) {
+          this.addProp(this.factory.createSmallTree(), jx, jz);
+        } else if (roll < 0.8) {
+          this.addProp(this.factory.createMediumTree(), jx, jz);
+        } else {
+          this.addProp(this.factory.createPineTree(), jx, jz);
+        }
+      }
+    }
+
+    // 森林公园步道长椅、景观石与花坛 (Level 2~3)
+    for (let i = 0; i < 28; i++) {
+      const rx = baseX + (Math.random() - 0.5) * 90;
+      const rz = baseZ + (Math.random() - 0.5) * 90;
+      this.addProp(this.factory.createParkBench(), rx, rz, Math.random() * Math.PI * 2);
+      this.addProp(this.factory.createRock(), rx + 2.0, rz - 1.5);
+      if (i % 2 === 0) {
+        this.addProp(this.factory.createFlowerPlanter(), rx - 1.8, rz + 1.8);
+      }
+      this.addProp(this.factory.createStreetLamp(), rx + 1.2, rz + 1.2);
+    }
+
+    // 散落在林间的野餐垃圾、易拉罐、快递盒与路障
+    for (let i = 0; i < 50; i++) {
+      const rx = baseX + (Math.random() - 0.5) * 92;
+      const rz = baseZ + (Math.random() - 0.5) * 92;
+      if (Math.random() > 0.5) {
+        this.addProp(this.factory.createSodaCan(), rx, rz);
       } else {
         this.addProp(this.factory.createTrafficCone(), rx, rz);
       }
@@ -302,152 +456,109 @@ export class CityBuilder {
   }
 
   // ====================================================
-  // 核心地块 3：东北宁静住宅区 (Level 1~8 阶梯式成长路线)
+  // 地块 5：东南阳光独栋别墅居住社区 ((85, 85) 周边)
   // ====================================================
-  populateResidentialDistrict() {
-    const minX = 16, maxX = 72;
-    const minZ = -72, maxZ = -16;
+  populateSuburbanCommunity() {
+    const baseX = 85;
+    const baseZ = 85;
 
-    // 两排整齐的独栋温馨别墅 (Level 8)
-    const houseCoords = [
-      [26, -26], [42, -26], [58, -26],
-      [26, -56], [42, -56], [58, -56]
-    ];
+    // 16 栋规整精致的独栋温馨别墅 (Level 7)
+    for (let row = 0; row < 4; row++) {
+      for (let col = 0; col < 4; col++) {
+        const hx = baseX - 36 + col * 24;
+        const hz = baseZ - 36 + row * 24;
 
-    houseCoords.forEach(([hx, hz]) => {
-      const house = this.factory.createSuburbanHouse();
-      this.addProp(house, hx, hz);
+        this.addProp(this.factory.createSuburbanHouse(), hx, hz);
 
-      // 每栋房前停放私家车 (Level 5)
-      const car = this.factory.createCar('sedan');
-      this.addProp(car, hx + 3.8, hz + 3.8, Math.PI / 2);
+        // 每栋别墅车道停放私家轿车或警车 (Level 5)
+        const isPolice = (row === 1 && col === 2);
+        const carMesh = isPolice ? this.factory.createPoliceCar() : this.factory.createCar('sedan');
+        this.addProp(carMesh, hx + 4.8, hz + 4.2, Math.PI / 2);
 
-      // 房前邮箱、消防栓、花盆
-      this.addProp(this.factory.createMailbox(), hx - 2.8, hz + 3.2);
-      this.addProp(this.factory.createFlowerPlanter(), hx + 1.5, hz + 3.2);
-      this.addProp(this.factory.createTrashCan(), hx + 3.2, hz + 1.5);
+        // 门前邮箱、花坛、消防栓与垃圾桶
+        this.addProp(this.factory.createMailbox(), hx - 3.5, hz + 3.8);
+        this.addProp(this.factory.createFlowerPlanter(), hx + 1.8, hz + 3.8);
+        this.addProp(this.factory.createTrashCan(), hx + 4.2, hz + 1.5);
+        this.addProp(this.factory.createCardboardBox(), hx - 1.5, hz + 3.5);
 
-      // 院落前的小包裹
-      this.addProp(this.factory.createCardboardBox(), hx - 1.2, hz + 3.0);
-    });
-
-    // 住宅区间街道松树与路灯
-    for (let x = 20; x <= 65; x += 12) {
-      const pine = this.factory.createPineTree();
-      this.addProp(pine, x, -41);
-      const lamp = this.factory.createStreetLamp();
-      this.addProp(lamp, x + 3.5, -39);
-    }
-  }
-
-  // ====================================================
-  // 核心地块 4：西南物流与餐饮商业街 (Level 1~6 丰富载具与小吃摊)
-  // ====================================================
-  populateCommercialMarket() {
-    const minX = -72, maxX = -16;
-    const minZ = 16, maxZ = 72;
-
-    // 沿街商业便利店与快餐厅 (Level 8)
-    const shop1 = this.factory.createCornerStore();
-    this.addProp(shop1, -28, 28);
-    const shop2 = this.factory.createCornerStore();
-    this.addProp(shop2, -54, 28);
-
-    // 自动售货机排 (Level 3)
-    for (let i = 0; i < 4; i++) {
-      const vm = this.factory.createVendingMachine();
-      this.addProp(vm, -20 - i * 2.2, 33);
-    }
-
-    // 热狗摊与摩托车队 (Level 4)
-    for (let i = 0; i < 3; i++) {
-      const cart = this.factory.createHotDogCart();
-      this.addProp(cart, -35 - i * 7, 45);
-
-      const moto = this.factory.createMotorcycle();
-      this.addProp(moto, -32 - i * 7, 48, Math.PI / 4);
-    }
-
-    // 物流货车 (Level 6)
-    const truck1 = this.factory.createBoxTruck();
-    this.addProp(truck1, -38, 60, Math.PI / 2);
-    const truck2 = this.factory.createBoxTruck();
-    this.addProp(truck2, -56, 60, Math.PI / 2);
-
-    // 街边消防栓、垃圾桶、大量易拉罐与纸箱 (Level 1~2)
-    for (let i = 0; i < 28; i++) {
-      const rx = minX + 5 + Math.random() * (maxX - minX - 10);
-      const rz = minZ + 5 + Math.random() * (maxZ - minZ - 10);
-      this.addProp(Math.random() > 0.5 ? this.factory.createSodaCan() : this.factory.createCardboardBox(), rx, rz);
-      if (i % 4 === 0) {
-        this.addProp(this.factory.createFireHydrant(), rx + 1.2, rz);
-      }
-    }
-  }
-
-  // ====================================================
-  // 核心地块 5：东南闹市中心与公交枢纽 (Level 5~7 车辆聚集区)
-  // ====================================================
-  populateDowntownAndParking() {
-    const minX = 16, maxX = 72;
-    const minZ = 16, maxZ = 72;
-
-    // 两辆大型城市公共巴士 (Level 7)
-    const bus1 = this.factory.createCityBus();
-    this.addProp(bus1, 35, 30, 0);
-    const bus2 = this.factory.createCityBus();
-    this.addProp(bus2, 55, 30, 0);
-
-    // 繁忙大停车场：排列整齐的轿车、出租车、SUV (Level 5)
-    for (let row = 0; row < 2; row++) {
-      for (let col = 0; col < 5; col++) {
-        const cx = 25 + col * 5.2;
-        const cz = 46 + row * 8.5;
-        const isTaxi = col === 1 || col === 4;
-        const car = this.factory.createCar(isTaxi ? 'taxi' : 'sedan');
-        this.addProp(car, cx, cz, Math.PI / 2);
-
-        // 车位旁常有被丢弃的易拉罐和路障
-        if (Math.random() > 0.4) {
-          this.addProp(this.factory.createSodaCan(), cx + 1.6, cz + 1.2);
-        }
+        // 院角绿化小松树
+        this.addProp(this.factory.createPineTree(), hx - 4.5, hz - 4.5);
       }
     }
 
-    // 东南角现代高层商业楼 (Level 9)
-    const officeEast = this.factory.createOfficeTower();
-    this.addProp(officeEast, 58, 58);
+    // 社区道路路灯与消防栓
+    for (let col = 0; col < 4; col++) {
+      const lx = baseX - 36 + col * 24;
+      this.addProp(this.factory.createStreetLamp(), lx, baseZ - 48);
+      this.addProp(this.factory.createStreetLamp(), lx, baseZ + 48);
+      this.addProp(this.factory.createFireHydrant(), lx + 3.0, baseZ - 48);
+    }
   }
 
   // ====================================================
-  // 主干道巡游车辆、路边路灯与行道树
+  // 地块 6：全城交通环路网络、公交枢纽与干道巡游载具
   // ====================================================
-  populateRoadTrafficAndProps() {
-    // 沿环路两侧布置路灯与垃圾桶
-    const ringCoords = [
-      { x: -42, z: -20 }, { x: -42, z: 20 },
-      { x: 42, z: -20 }, { x: 42, z: 20 },
-      { x: -20, z: -42 }, { x: 20, z: -42 },
-      { x: -20, z: 42 }, { x: 20, z: 42 }
+  populateMetropolitanTransit() {
+    // 城市公交大巴 (Level 7 巨物载具，环绕四方干道)
+    const busStations = [
+      { x: -85, z: 25, rot: 0 },
+      { x: 85, z: 25, rot: 0 },
+      { x: -85, z: -25, rot: Math.PI },
+      { x: 85, z: -25, rot: Math.PI },
+      { x: 25, z: -85, rot: Math.PI / 2 },
+      { x: -25, z: -85, rot: -Math.PI / 2 },
+      { x: 25, z: 85, rot: Math.PI / 2 },
+      { x: -25, z: 85, rot: -Math.PI / 2 },
     ];
-    ringCoords.forEach(pos => {
-      const lamp = this.factory.createStreetLamp();
-      this.addProp(lamp, pos.x, pos.z);
-
-      const trash = this.factory.createTrashCan();
-      this.addProp(trash, pos.x + 1.4, pos.z);
+    busStations.forEach(b => {
+      this.addProp(this.factory.createCityBus(), b.x, b.z, b.rot);
     });
 
-    // 主干道旁停靠的巡游出租车与摩托车
-    const roadCars = [
-      { x: -25, z: 3.5, type: 'taxi', rot: 0 },
-      { x: 30, z: -3.5, type: 'sedan', rot: Math.PI },
-      { x: 3.5, z: -30, type: 'sedan', rot: Math.PI / 2 },
-      { x: -3.5, z: 28, type: 'taxi', rot: -Math.PI / 2 },
+    // 重型厢式物流货车 (Level 6)
+    const truckSpots = [
+      { x: -45, z: 8.5, rot: 0 },
+      { x: 45, z: -8.5, rot: Math.PI },
+      { x: -8.5, z: -45, rot: Math.PI / 2 },
+      { x: 8.5, z: 45, rot: -Math.PI / 2 },
+      { x: -110, z: -85, rot: 0 },
+      { x: 110, z: 85, rot: Math.PI },
     ];
-    roadCars.forEach(rc => {
-      const car = this.factory.createCar(rc.type);
-      this.addProp(car, rc.x, rc.z, rc.rot);
+    truckSpots.forEach(t => {
+      this.addProp(this.factory.createBoxTruck(), t.x, t.z, t.rot);
     });
+
+    // 主干道与联络道路上巡游的轿车与出租车 (Level 5)
+    const avenueCars = [
+      { x: -60, z: 4.5, type: 'sedan', rot: 0 },
+      { x: -30, z: -4.5, type: 'taxi', rot: Math.PI },
+      { x: 30, z: 4.5, type: 'taxi', rot: 0 },
+      { x: 60, z: -4.5, type: 'sedan', rot: Math.PI },
+      { x: 4.5, z: -60, type: 'taxi', rot: Math.PI / 2 },
+      { x: -4.5, z: -30, type: 'sedan', rot: -Math.PI / 2 },
+      { x: 4.5, z: 30, type: 'sedan', rot: Math.PI / 2 },
+      { x: -4.5, z: 60, type: 'taxi', rot: -Math.PI / 2 },
+      { x: -100, z: 4.5, type: 'police', rot: 0 },
+      { x: 100, z: -4.5, type: 'police', rot: Math.PI },
+    ];
+    avenueCars.forEach(c => {
+      const m = c.type === 'police' ? this.factory.createPoliceCar() : this.factory.createCar(c.type);
+      this.addProp(m, c.x, c.z, c.rot);
+    });
+
+    // 外环大道两侧密集排列路灯与垃圾桶
+    for (let pos = -135; pos <= 135; pos += 30) {
+      if (Math.abs(pos) < 15) continue;
+      // 东西向外环
+      this.addProp(this.factory.createStreetLamp(), pos, -92);
+      this.addProp(this.factory.createStreetLamp(), pos, 92);
+      this.addProp(this.factory.createTrashCan(), pos + 1.8, -92);
+      this.addProp(this.factory.createTrashCan(), pos + 1.8, 92);
+
+      // 南北向外环
+      this.addProp(this.factory.createStreetLamp(), -92, pos);
+      this.addProp(this.factory.createStreetLamp(), 92, pos);
+      this.addProp(this.factory.createTrashCan(), -92, pos + 1.8);
+      this.addProp(this.factory.createTrashCan(), 92, pos + 1.8);
+    }
   }
 }
