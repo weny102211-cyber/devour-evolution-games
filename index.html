@@ -191,17 +191,34 @@
         </div>
       </div>
 
-      <!-- 赞助投喂专区 -->
+      <!-- 赞助投喂专区 (支付宝 / 打赏支持) -->
       <div id="tab-panel-donate" class="tab-panel" style="display: none;">
         <div class="donate-card">
-          <p class="donate-intro">《吞噬进化Games》由独立开发者用业余时间倾心倾力打造，您的每一份支持都是持续更新全城破坏、新玩法与炫彩神级皮肤的动力！</p>
+          <p class="donate-intro">《吞噬进化Games》由独立开发者倾心倾力打造，您的每一份支持都是持续更新全城破坏、新玩法与炫彩神级皮肤的动力！</p>
           <div class="donate-tiers">
-            <div class="tier-pill">☕ 赞助 3 元 (投喂一杯咖啡)</div>
-            <div class="tier-pill">🍕 赞助 10 元 (解锁全套神级特权码)</div>
+            <div class="tier-pill">☕ 赞助 3 元 (投喂作者咖啡)</div>
+            <div class="tier-pill">🍕 赞助 10 元 (解锁全套神级特权)</div>
           </div>
-          <div class="donate-actions">
-            <a id="btn-afdian-link" href="https://afdian.com" target="_blank" class="btn-afdian">⚡ 前往【爱发电】主页一键赞助</a>
-            <div class="donate-tip">💡 赞助后私信作者或通过订单号即可获得【GOD2026】专属神级兑换码！</div>
+
+          <!-- 支付宝赞助核心卡片 -->
+          <div class="alipay-sponsor-card">
+            <div class="alipay-header">
+              <span class="alipay-icon">🔷</span>
+              <span class="alipay-title">支付宝扫码赞助</span>
+              <span class="alipay-badge">零费率直达个人</span>
+            </div>
+            <div class="alipay-qr-box">
+              <img id="alipay-qr-img" src="alipay_qr.png" alt="支付宝收款码" onerror="this.style.display='none'; document.getElementById('alipay-qr-fallback').style.display='flex';">
+              <div id="alipay-qr-fallback" class="alipay-fallback" style="display: none;">
+                <div class="fallback-icon">📱</div>
+                <div class="fallback-text"><strong>【支付宝赞助通道已就绪】</strong><br>可在根目录替换您的 <code>alipay_qr.png</code> 个人收款码图片，玩家扫码打赏金额将 100% 直入您的支付宝！</div>
+              </div>
+            </div>
+            <div class="alipay-tip">💡 赞助任意金额，备注您的游戏ID或留言，即可获得专属【GOD2026】限定赛博神明神级皮肤！</div>
+          </div>
+
+          <div class="donate-actions" style="margin-top: 14px;">
+            <a id="btn-afdian-link" href="https://afdian.com" target="_blank" class="btn-afdian">⚡ 或前往【爱发电】主页赞助</a>
           </div>
         </div>
       </div>
